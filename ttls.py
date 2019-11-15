@@ -71,7 +71,7 @@ class Twinkly(object):
     def mode(self) -> str:
         return self.get_mode()['mode']
 
-    @mode.settera
+    @mode.setter
     def mode(self, m: str) -> None:
         self.set_mode({'mode': m})
 
