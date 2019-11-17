@@ -6,6 +6,7 @@
 
 import argparse
 import base64
+import json
 import logging
 import os
 import time
@@ -14,16 +15,22 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+TWINKLY_MODES = ['rt', 'movie', 'off', 'demo', 'effect']
+
 
 class Twinkly(object):
 
     def __init__(self, host: str, login: bool = True):
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.base = f"http://{host}/xled/v1"
         self.session = requests.Session()
+        self.host = host
         self.expires = None
         if login:
             self.ensure_token()
+
+    @property
+    def base(self) -> str:
+        return f"http://{self.host}/xled/v1"
 
     def _post(self, endpoint, **kwargs):
         self.ensure_token()
@@ -147,16 +154,36 @@ def main():
 
     parser = argparse.ArgumentParser(description='Twinkly Twinkly Little Star')
     parser.add_argument('--host',
-                        dest='host',
-                        metavar='host',
+                        metavar='hostname',
                         required=True,
                         help='Device address')
     parser.add_argument('--debug',
-                        dest='debug',
                         action='store_true',
                         help="Enable debugging")
-    parser.add_argument('command')
-    parser.add_argument('state', metavar='arg', nargs='*')
+    parser.add_argument('--json',
+                        action='store_true',
+                        help="Output result as compact JSON")
+
+    subparsers = parser.add_subparsers(dest='command')
+
+    subparsers.add_parser('network', help="Get network status")
+    subparsers.add_parser('firmware', help="Get firmware version")
+    subparsers.add_parser('details', help="Get device details")
+
+    parser_name = subparsers.add_parser('name', help="Get or set device name")
+    parser_name.add_argument('--name', metavar='name', type=str, required=False)
+
+    parser_mode = subparsers.add_parser('mode', help="Get or set LED operation mode")
+    parser_mode.add_argument('--mode', choices=TWINKLY_MODES, required=False)
+
+    parser_mqtt = subparsers.add_parser('mqtt', help="Get or set MQTT configuration")
+    parser_mqtt.add_argument('--json',
+                             dest='mqtt_json',
+                             metavar='mqtt',
+                             type=str,
+                             required=False,
+                             help="MQTT config as JSON")
+
     args = parser.parse_args()
 
     if args.debug:
@@ -167,24 +194,29 @@ def main():
 
     t = Twinkly(host=args.host)
 
-    if args.command == 'get-name':
-        res = t.get_name()
-    elif args.command == 'get-network':
+    if args.command == 'name':
+        res = t.get_name() if args.name is None else t.set_name({'name': args.name})
+    elif args.command == 'network':
         res = t.get_network_status()
-    elif args.command == 'get-firmware':
+    elif args.command == 'firmware':
         res = t.get_firmware_version()
-    elif args.command == 'get-details':
+    elif args.command == 'details':
         res = t.get_details()
-    elif args.command == 'get-mode':
-        res = t.get_mode()
-    elif args.command == 'set-mode':
-        res = t.set_mode({'mode': args.state[0]})
-    elif args.command == 'get-mqtt':
-        res = t.get_mqtt()
+    elif args.command == 'mode':
+        res = t.get_mode() if args.mode is None else t.set_mode({'mode': args.mode})
+    elif args.command == 'mqtt':
+        if args.mqtt_json is None:
+            res = t.get_mqtt()
+        else:
+            data = json.loads(args.mqtt_json)
+            res if args.mode is None else t.set_mqtt(data)
     else:
         raise Exception("Unknown command")
 
-    print(res)
+    if args.json:
+        print(json.dumps(res, indent=None, separators=(',', ':')))
+    else:
+        print(json.dumps(res, indent=4))
 
 
 if __name__ == "__main__":
