@@ -63,11 +63,14 @@ class Twinkly(object):
 
     def _post(self, endpoint, **kwargs):
         self.ensure_token()
-        self.logger.info("POST endpoint %s", kwargs.get('json'))
+        self.logger.info("POST endpoint %s", endpoint)
+        if 'json' in kwargs:
+            self.logger.info("POST payload %s", kwargs['json'])
         return self.session.post(f"{self.base}/{endpoint}", **kwargs)
 
     def _get(self, endpoint, **kwargs):
         self.ensure_token()
+        self.logger.info("GET endpoint %s", endpoint)
         return self.session.get(f"{self.base}/{endpoint}", **kwargs)
 
     def ensure_token(self):
@@ -187,6 +190,22 @@ class Twinkly(object):
             payload.extend(list(x))
         self.socket.sendto(header + bytes(payload), (self.host, self.rt_port))
 
+    def get_movie_config(self):
+        response = self._get('led/movie/config')
+        response.raise_for_status()
+        return response.json()
+
+    def set_movie_config(self, data):
+        response = self._post('led/movie/config', json=data)
+        response.raise_for_status()
+        return response.json()
+
+    def upload_movie(self, movie: bytes):
+        response = self._post('led/movie/full', data=movie,
+                              headers={'Content-Type': 'application/octet-stream'})
+        response.raise_for_status()
+        return response.json()
+
     def realtime(self):
         self.mode = "rt"
 
@@ -236,6 +255,21 @@ def main():
                              required=False,
                              help="MQTT config as JSON")
 
+    parser_movie = subparsers.add_parser('movie', help="Movie configuration")
+    parser_movie.add_argument('--delay',
+                              dest='movie_delay',
+                              metavar='milliseconds',
+                              type=int,
+                              default=100,
+                              required=False,
+                              help="Delay between frames")
+    parser_movie.add_argument('--file',
+                              dest='movie_file',
+                              metavar='filename',
+                              type=str,
+                              required=True,
+                              help="Movie file")
+
     args = parser.parse_args()
 
     if args.debug:
@@ -262,6 +296,20 @@ def main():
         else:
             data = json.loads(args.mqtt_json)
             res if args.mode is None else t.set_mqtt(data)
+    elif args.command == 'movie':
+        if args.movie_file:
+            with open(args.movie_file, 'rb') as f:
+                movie = f.read()
+            params = {
+                'frame_delay': args.movie_delay,
+                'leds_number': t.length,
+                'frames_number': int(len(movie) / 3 / t.length)
+            }
+            t.mode = 'movie'
+            t.set_movie_config(params)
+            res = t.upload_movie(movie)
+        else:
+            res = t.get_movie_config()
     else:
         raise Exception("Unknown command")
 
