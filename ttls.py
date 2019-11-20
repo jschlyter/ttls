@@ -91,6 +91,7 @@ class Twinkly(object):
     def logout(self):
         response = self._post('logout', json={})
         response.raise_for_status()
+        self._token = None
 
     def verify_login(self):
         response = self._post('verify', json={})
