@@ -31,13 +31,16 @@ import base64
 import json
 import logging
 import os
+import socket
 import time
+from typing import List, Tuple
 
 import requests
 
 logger = logging.getLogger(__name__)
 
 TWINKLY_MODES = ['rt', 'movie', 'off', 'demo', 'effect']
+TWINKLY_FRAME = List[Tuple[int, int, int]]
 
 
 class Twinkly(object):
@@ -45,8 +48,12 @@ class Twinkly(object):
     def __init__(self, host: str, login: bool = True):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.session = requests.Session()
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.host = host
+        self.rt_port = 7777
         self.expires = None
+        self._token = None
+        self._length = None
         if login:
             self.ensure_token()
 
@@ -77,7 +84,8 @@ class Twinkly(object):
         response = self.session.post(f"{self.base}/login", json=payload)
         response.raise_for_status()
         r = response.json()
-        self.session.headers['X-Auth-Token'] = r['authentication_token']
+        self._token = r['authentication_token']
+        self.session.headers['X-Auth-Token'] = self._token
         self.expires = time.time() + r['authentication_token_expires_in']
 
     def logout(self):
@@ -87,6 +95,17 @@ class Twinkly(object):
     def verify_login(self):
         response = self._post('verify', json={})
         response.raise_for_status()
+
+    @property
+    def token(self) -> str:
+        self.ensure_token()
+        return self._token
+
+    @property
+    def length(self) -> int:
+        if self._length is None:
+            self._length = self.get_details()['number_of_led']
+        return self._length
 
     @property
     def name(self) -> str:
@@ -158,6 +177,15 @@ class Twinkly(object):
         response.raise_for_status()
         return response.json()
 
+    def send_frame(self, frame: TWINKLY_FRAME):
+        if len(frame) != self.length:
+            raise ValueError("Invalid frame length")
+        header = bytes([0x01]) + bytes(base64.b64decode(self.token)) + bytes([self.length])
+        payload = []
+        for x in frame:
+            payload.extend(list(x))
+        self.socket.sendto(header + bytes(payload), (self.host, self.rt_port))
+
     def realtime(self):
         self.mode = "rt"
 
@@ -191,6 +219,7 @@ def main():
     subparsers.add_parser('network', help="Get network status")
     subparsers.add_parser('firmware', help="Get firmware version")
     subparsers.add_parser('details', help="Get device details")
+    subparsers.add_parser('token', help="Get authentication token")
 
     parser_name = subparsers.add_parser('name', help="Get or set device name")
     parser_name.add_argument('--name', metavar='name', type=str, required=False)
