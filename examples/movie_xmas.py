@@ -1,4 +1,4 @@
-"""Example of Twinkly movie file"""
+"""Generate example of Twinkly movie file"""
 
 import argparse
 import random
