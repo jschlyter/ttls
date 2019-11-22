@@ -43,10 +43,6 @@ TwinklyFrame = List[TwinklyColour]
 TWINKLY_MODES = ['rt', 'movie', 'off', 'demo', 'effect']
 
 
-class TwinklyException(Exception):
-    pass
-
-
 class Twinkly(object):
 
     def __init__(self, host: str):
