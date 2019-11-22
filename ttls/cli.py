@@ -30,6 +30,9 @@ import argparse
 import asyncio
 import json
 import logging
+import re
+
+from colour import Color
 
 from .client import TWINKLY_MODES, Twinkly
 
@@ -87,6 +90,14 @@ async def main_loop():
                               required=False,
                               help="Movie file")
 
+    parser_colour = subparsers.add_parser('static', help="Set static")
+    parser_colour.add_argument('--colour',
+                               dest='colour',
+                               metavar='colour',
+                               type=str,
+                               required=False,
+                               help="Colour")
+
     args = parser.parse_args()
 
     if args.debug:
@@ -125,9 +136,19 @@ async def main_loop():
             }
             await t.set_mode('movie')
             await t.set_movie_config(params)
-            res = t.upload_movie(movie)
+            res = await t.upload_movie(movie)
         else:
-            res = t.get_movie_config()
+            res = await t.get_movie_config()
+    elif args.command == 'static':
+        await t.interview()
+        m = re.match(r'(\d+),(\d+),(\d+)', args.colour)
+        if m is not None:
+            rgb = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+            res = await t.set_static_colour(rgb)
+        else:
+            c = Color(args.colour)
+            rgb = (int(c.red * 255), int(c.green * 255), int(c.blue * 255))
+            res = await t.set_static_colour(rgb)
     else:
         raise Exception("Unknown command")
 
