@@ -37,7 +37,8 @@ from aiohttp import ClientSession
 
 logger = logging.getLogger(__name__)
 
-TwinklyFrame = List[Tuple[int, int, int]]
+TwinklyColour = Tuple[int, int, int]
+TwinklyFrame = List[TwinklyColour]
 
 TWINKLY_MODES = ['rt', 'movie', 'off', 'demo', 'effect']
 
@@ -79,7 +80,8 @@ class Twinkly(object):
         self.logger.info("POST endpoint %s", endpoint)
         if 'json' in kwargs:
             self.logger.info("POST payload %s", kwargs['json'])
-        async with self.session.post(f"{self.base}/{endpoint}", headers=self.headers, **kwargs) as r:
+        headers = kwargs.pop('headers', self.headers)
+        async with self.session.post(f"{self.base}/{endpoint}", headers=headers, **kwargs) as r:
             return await r.json()
 
     async def _get(self, endpoint, **kwargs):
@@ -167,8 +169,7 @@ class Twinkly(object):
         self.socket.sendto(header + bytes(payload), (self.host, self.rt_port))
 
     async def get_movie_config(self):
-        response = self._get('led/movie/config')
-        return await response
+        return await self._get('led/movie/config')
 
     async def set_movie_config(self, data):
         return await self._post('led/movie/config', json=data)
@@ -176,3 +177,10 @@ class Twinkly(object):
     async def upload_movie(self, movie: bytes):
         return await self._post('led/movie/full', data=movie,
                                 headers={'Content-Type': 'application/octet-stream'})
+
+    async def set_static_colour(self, colour: TwinklyColour):
+        frame = [colour for _ in range(0, self.length)]
+        movie = bytes([item for t in frame for item in t])
+        await self.upload_movie(movie)
+        await self.set_movie_config({'frames_number': 1})
+        await self.set_mode('movie')
