@@ -155,7 +155,8 @@ async def main_loop():
     if args.json:
         print(json.dumps(res, indent=None, separators=(',', ':')))
     else:
-        print(json.dumps(res, indent=4))
+        if res is not None:
+            print(json.dumps(res, indent=4))
 
     await t.close()
 
