@@ -27,17 +27,17 @@ IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import argparse
+import asyncio
 import json
 import logging
 
-from .client import Twinkly, TWINKLY_MODES
-
+from .client import TWINKLY_MODES, Twinkly
 
 logger = logging.getLogger(__name__)
 
 
-def main():
-    """ Main function"""
+async def main_loop():
+    """Main function"""
 
     parser = argparse.ArgumentParser(description='Twinkly Twinkly Little Star')
     parser.add_argument('--host',
@@ -98,15 +98,15 @@ def main():
     t = Twinkly(host=args.host)
 
     if args.command == 'name':
-        res = t.get_name() if args.name is None else t.set_name({'name': args.name})
+        res = await (t.get_name() if args.name is None else t.set_name(args.name))
     elif args.command == 'network':
         res = t.get_network_status()
     elif args.command == 'firmware':
         res = t.get_firmware_version()
     elif args.command == 'details':
-        res = t.get_details()
+        res = await t.get_details()
     elif args.command == 'mode':
-        res = t.get_mode() if args.mode is None else t.set_mode({'mode': args.mode})
+        res = await (t.get_mode() if args.mode is None else t.set_mode(args.mode))
     elif args.command == 'mqtt':
         if args.mqtt_json is None:
             res = t.get_mqtt()
@@ -117,13 +117,14 @@ def main():
         if args.movie_file:
             with open(args.movie_file, 'rb') as f:
                 movie = f.read()
+            await t.interview()
             params = {
                 'frame_delay': args.movie_delay,
                 'leds_number': t.length,
                 'frames_number': int(len(movie) / 3 / t.length)
             }
-            t.mode = 'movie'
-            t.set_movie_config(params)
+            await t.set_mode('movie')
+            await t.set_movie_config(params)
             res = t.upload_movie(movie)
         else:
             res = t.get_movie_config()
@@ -134,6 +135,12 @@ def main():
         print(json.dumps(res, indent=None, separators=(',', ':')))
     else:
         print(json.dumps(res, indent=4))
+
+    await t.close()
+
+
+def main():
+    asyncio.run(main_loop())
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 """Example of sending realtime frames to Twinkly"""
 
+import asyncio
 import argparse
 import random
 import time
@@ -22,7 +23,7 @@ def generate_xmas_frame(n: int) -> TwinklyFrame:
     return res
 
 
-def main() -> None:
+async def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('--host',
                         metavar='hostname',
@@ -45,13 +46,16 @@ def main() -> None:
     args = parser.parse_args()
 
     t = Twinkly(host=args.host)
-    t.mode = 'rt'
+    await t.interview()
+    await t.set_mode('rt')
 
     for _ in range(0, args.count):
         frame = generate_xmas_frame(t.length)
-        t.send_frame(frame)
+        await t.send_frame(frame)
         time.sleep(args.delay)
+
+    await t.close()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
