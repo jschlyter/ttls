@@ -40,7 +40,7 @@ from .client import TWINKLY_MODES, Twinkly
 logger = logging.getLogger(__name__)
 
 
-async def main_loop():
+async def main_loop() -> None:
     """Main function"""
 
     parser = argparse.ArgumentParser(description='Twinkly Twinkly Little Star')
@@ -163,7 +163,7 @@ async def main_loop():
     await t.close()
 
 
-def main():
+def main() -> None:
     asyncio.run(main_loop())
 
 
