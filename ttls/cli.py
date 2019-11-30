@@ -120,10 +120,10 @@ async def main_loop():
         res = await (t.get_mode() if args.mode is None else t.set_mode(args.mode))
     elif args.command == 'mqtt':
         if args.mqtt_json is None:
-            res = t.get_mqtt()
+            res = await t.get_mqtt()
         else:
             data = json.loads(args.mqtt_json)
-            res if args.mode is None else t.set_mqtt(data)
+            res if args.mode is None else await t.set_mqtt(data)
     elif args.command == 'movie':
         if args.movie_file:
             with open(args.movie_file, 'rb') as f:
@@ -151,6 +151,7 @@ async def main_loop():
             res = await t.set_static_colour(rgb)
     else:
         parser.print_help()
+        await t.close()
         sys.exit(0)
 
     if args.json:
