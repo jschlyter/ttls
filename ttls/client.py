@@ -111,18 +111,6 @@ class Twinkly(object):
     async def verify_login(self) -> None:
         await self._post('verify', json={})
 
-    @property
-    def name(self) -> str:
-        return self.get_name()['name']
-
-    @property
-    def mode(self) -> str:
-        return self.get_mode()['mode']
-
-    @property
-    def version(self) -> str:
-        return self.get_firmware_version()['version']
-
     async def get_name(self):
         return await self._get('device_name')
 
