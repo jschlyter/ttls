@@ -7,3 +7,5 @@ install:
  - pip install -e .
 script:
  - pylama ttls
+notifications:
+  email: true
