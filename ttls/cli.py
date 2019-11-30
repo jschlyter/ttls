@@ -111,9 +111,9 @@ async def main_loop():
     if args.command == 'name':
         res = await (t.get_name() if args.name is None else t.set_name(args.name))
     elif args.command == 'network':
-        res = t.get_network_status()
+        res = await t.get_network_status()
     elif args.command == 'firmware':
-        res = t.get_firmware_version()
+        res = await t.get_firmware_version()
     elif args.command == 'details':
         res = await t.get_details()
     elif args.command == 'mode':
