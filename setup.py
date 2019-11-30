@@ -13,12 +13,15 @@ setup(
     license='BSD',
     classifiers=[
         'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python :: 3 :: Only'
+        'Programming Language :: Python :: 3 :: Only',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     url='https://github.com/jschlyter/ttls',
     packages=['ttls'],
     install_requires=[
-        'requests>=2.20.0',
+        'aiohttp',
+        'colour',
         'setuptools',
     ],
     entry_points={
