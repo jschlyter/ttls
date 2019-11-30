@@ -8,6 +8,5 @@ install:
 script:
  - pylama ttls
  - mypy -m ttls.client
- - mypy -m ttls.cli
 notifications:
   email: true
