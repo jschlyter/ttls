@@ -31,7 +31,7 @@ import logging
 import os
 import socket
 import time
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict, Any, Union
 
 from aiohttp import ClientSession
 
@@ -39,6 +39,7 @@ logger = logging.getLogger(__name__)
 
 TwinklyColour = Tuple[int, int, int]
 TwinklyFrame = List[TwinklyColour]
+TwinklyResult = Optional[dict]
 
 TWINKLY_MODES = ['rt', 'movie', 'off', 'demo', 'effect']
 
@@ -49,29 +50,29 @@ class Twinkly(object):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.session = ClientSession(raise_for_status=True)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.headers = {}
+        self.headers: Dict[str, str] = {}
         self.host = host
         self.rt_port = 7777
         self.expires = None
         self._token = ''
-        self.details = {}
+        self.details: Dict[str, Union[str, int]] = {}
 
     @property
     def base(self) -> str:
         return f"http://{self.host}/xled/v1"
 
     @property
-    def length(self) -> Optional[int]:
-        return self.details.get('number_of_led')
+    def length(self) -> int:
+        return int(self.details['number_of_led'])
 
-    async def close(self):
+    async def close(self) -> None:
         await self.session.close()
 
-    async def interview(self):
+    async def interview(self) -> None:
         if len(self.details) == 0:
             self.details = await self.get_details()
 
-    async def _post(self, endpoint, **kwargs):
+    async def _post(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
         self.logger.info("POST endpoint %s", endpoint)
         if 'json' in kwargs:
@@ -80,7 +81,7 @@ class Twinkly(object):
         async with self.session.post(f"{self.base}/{endpoint}", headers=headers, **kwargs) as r:
             return await r.json()
 
-    async def _get(self, endpoint, **kwargs):
+    async def _get(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
         self.logger.info("GET endpoint %s", endpoint)
         async with self.session.get(f"{self.base}/{endpoint}", headers=self.headers, **kwargs) as r:
@@ -111,37 +112,37 @@ class Twinkly(object):
     async def verify_login(self) -> None:
         await self._post('verify', json={})
 
-    async def get_name(self):
+    async def get_name(self) -> Any:
         return await self._get('device_name')
 
-    async def set_name(self, name):
+    async def set_name(self, name: str) -> Any:
         return await self._post('device_name', json={'name': name})
 
-    async def reset(self):
+    async def reset(self) -> Any:
         return await self._get('reset')
 
-    async def get_network_status(self):
+    async def get_network_status(self) -> Any:
         return await self._get('network/status')
 
-    async def get_firmware_version(self):
+    async def get_firmware_version(self) -> Any:
         return await self._get('fw/version')
 
-    async def get_details(self):
+    async def get_details(self) -> Any:
         return await self._get('gestalt')
 
-    async def get_mode(self):
+    async def get_mode(self) -> Any:
         return await self._get('led/mode')
 
-    async def set_mode(self, mode):
+    async def set_mode(self, mode: str) -> Any:
         return await self._post('led/mode', json={'mode': mode})
 
-    async def get_mqtt(self):
+    async def get_mqtt(self) -> Any:
         return await self._get('mqtt/config')
 
-    async def set_mqtt(self, data):
+    async def set_mqtt(self, data: dict) -> Any:
         return await self._post('mqtt/config', json=data)
 
-    async def send_frame(self, frame: TwinklyFrame):
+    async def send_frame(self, frame: TwinklyFrame) -> None:
         await self.interview()
         if len(frame) != self.length:
             raise ValueError("Invalid frame length")
@@ -152,17 +153,17 @@ class Twinkly(object):
             payload.extend(list(x))
         self.socket.sendto(header + bytes(payload), (self.host, self.rt_port))
 
-    async def get_movie_config(self):
+    async def get_movie_config(self) -> Any:
         return await self._get('led/movie/config')
 
-    async def set_movie_config(self, data):
+    async def set_movie_config(self, data: dict) -> Any:
         return await self._post('led/movie/config', json=data)
 
-    async def upload_movie(self, movie: bytes):
+    async def upload_movie(self, movie: bytes) -> Any:
         return await self._post('led/movie/full', data=movie,
                                 headers={'Content-Type': 'application/octet-stream'})
 
-    async def set_static_colour(self, colour: TwinklyColour):
+    async def set_static_colour(self, colour: TwinklyColour) -> None:
         frame = [colour for _ in range(0, self.length)]
         movie = bytes([item for t in frame for item in t])
         await self.upload_movie(movie)
