@@ -31,6 +31,7 @@ import asyncio
 import json
 import logging
 import re
+import sys
 
 from colour import Color
 
@@ -59,7 +60,6 @@ async def main_loop():
     subparsers.add_parser('network', help="Get network status")
     subparsers.add_parser('firmware', help="Get firmware version")
     subparsers.add_parser('details', help="Get device details")
-    subparsers.add_parser('token', help="Get authentication token")
 
     parser_name = subparsers.add_parser('name', help="Get or set device name")
     parser_name.add_argument('--name', metavar='name', type=str, required=False)
@@ -150,7 +150,8 @@ async def main_loop():
             rgb = (int(c.red * 255), int(c.green * 255), int(c.blue * 255))
             res = await t.set_static_colour(rgb)
     else:
-        raise Exception("Unknown command")
+        parser.print_help()
+        sys.exit(0)
 
     if args.json:
         print(json.dumps(res, indent=None, separators=(',', ':')))
