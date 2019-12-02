@@ -83,7 +83,8 @@ class Twinkly(object):
     async def _get(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
         logger.info("GET endpoint %s", endpoint)
-        async with self.session.get(f"{self.base}/{endpoint}", headers=self.headers, **kwargs) as r:
+        headers = kwargs.pop('headers', self.headers)
+        async with self.session.get(f"{self.base}/{endpoint}", headers=headers, **kwargs) as r:
             return await r.json()
 
     async def ensure_token(self) -> str:
