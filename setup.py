@@ -7,7 +7,11 @@ from ttls import __version__
 setup(
     name='ttls',
     version=__version__,
-    description='Another package to communicate with Twinkly lights',
+    description='Twinkly Twinkly Little Star',
+    long_description="""\
+ttls (Twinkly Twinkly Little Star) can help you make async requests to
+Twinkly LEDs. A commmand line utility is also included.
+""",
     author='Jakob Schlyter',
     author_email='jakob@schlyter.se',
     license='BSD',
