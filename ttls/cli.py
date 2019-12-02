@@ -40,6 +40,64 @@ from .client import TWINKLY_MODES, Twinkly
 logger = logging.getLogger(__name__)
 
 
+async def command_name(t: Twinkly, args: argparse.Namespace):
+    if args.name is None:
+        return await t.get_name()
+    return await t.set_name(args.name)
+
+
+async def command_network(t: Twinkly, args: argparse.Namespace):
+    return await t.get_network_status()
+
+
+async def command_firmware(t: Twinkly, args: argparse.Namespace):
+    return await t.get_firmware_version()
+
+
+async def command_details(t: Twinkly, args: argparse.Namespace):
+    return await t.get_details()
+
+
+async def command_mode(t: Twinkly, args: argparse.Namespace):
+    if args.mode is None:
+        return await t.get_mode()
+    return await t.set_mode(args.mode)
+
+
+async def command_mqtt(t: Twinkly, args: argparse.Namespace):
+    if args.mqtt_json is None:
+        return await t.get_mqtt()
+    data = json.loads(args.mqtt_json)
+    return await t.set_mqtt(data)
+
+
+async def command_movie(t: Twinkly, args: argparse.Namespace):
+    if args.movie_file is None:
+        return await t.get_movie_config()
+    with open(args.movie_file, 'rb') as f:
+        movie = f.read()
+    await t.interview()
+    params = {
+        'frame_delay': args.movie_delay,
+        'leds_number': t.length,
+        'frames_number': int(len(movie) / 3 / t.length)
+    }
+    await t.set_mode('movie')
+    await t.set_movie_config(params)
+    return await t.upload_movie(movie)
+
+
+async def command_static(t: Twinkly, args: argparse.Namespace):
+    await t.interview()
+    m = re.match(r'(\d+),(\d+),(\d+)', args.colour)
+    if m is not None:
+        rgb = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+    else:
+        c = Color(args.colour)
+        rgb = (int(c.red * 255), int(c.green * 255), int(c.blue * 255))
+    return await t.set_static_colour(rgb)
+
+
 async def main_loop() -> None:
     """Main function"""
 
@@ -57,15 +115,22 @@ async def main_loop() -> None:
 
     subparsers = parser.add_subparsers(dest='command')
 
-    subparsers.add_parser('network', help="Get network status")
-    subparsers.add_parser('firmware', help="Get firmware version")
-    subparsers.add_parser('details', help="Get device details")
+    parser_network = subparsers.add_parser('network', help="Get network status")
+    parser_network.set_defaults(func=command_network)
+
+    parser_firmware = subparsers.add_parser('firmware', help="Get firmware version")
+    parser_firmware.set_defaults(func=command_firmware)
+
+    parser_details = subparsers.add_parser('details', help="Get device details")
+    parser_details.set_defaults(func=command_details)
 
     parser_name = subparsers.add_parser('name', help="Get or set device name")
     parser_name.add_argument('--name', metavar='name', type=str, required=False)
+    parser_name.set_defaults(func=command_name)
 
     parser_mode = subparsers.add_parser('mode', help="Get or set LED operation mode")
     parser_mode.add_argument('--mode', choices=TWINKLY_MODES, required=False)
+    parser_mode.set_defaults(func=command_mode)
 
     parser_mqtt = subparsers.add_parser('mqtt', help="Get or set MQTT configuration")
     parser_mqtt.add_argument('--json',
@@ -74,6 +139,7 @@ async def main_loop() -> None:
                              type=str,
                              required=False,
                              help="MQTT config as JSON")
+    parser_mqtt.set_defaults(func=command_mqtt)
 
     parser_movie = subparsers.add_parser('movie', help="Movie configuration")
     parser_movie.add_argument('--delay',
@@ -89,14 +155,16 @@ async def main_loop() -> None:
                               type=str,
                               required=False,
                               help="Movie file")
+    parser_movie.set_defaults(func=command_movie)
 
     parser_colour = subparsers.add_parser('static', help="Set static")
     parser_colour.add_argument('--colour',
                                dest='colour',
                                metavar='colour',
                                type=str,
-                               required=False,
+                               required=True,
                                help="Colour")
+    parser_colour.set_defaults(func=command_static)
 
     args = parser.parse_args()
 
@@ -108,48 +176,9 @@ async def main_loop() -> None:
 
     t = Twinkly(host=args.host)
 
-    if args.command == 'name':
-        res = await (t.get_name() if args.name is None else t.set_name(args.name))
-    elif args.command == 'network':
-        res = await t.get_network_status()
-    elif args.command == 'firmware':
-        res = await t.get_firmware_version()
-    elif args.command == 'details':
-        res = await t.get_details()
-    elif args.command == 'mode':
-        res = await (t.get_mode() if args.mode is None else t.set_mode(args.mode))
-    elif args.command == 'mqtt':
-        if args.mqtt_json is None:
-            res = await t.get_mqtt()
-        else:
-            data = json.loads(args.mqtt_json)
-            res if args.mode is None else await t.set_mqtt(data)
-    elif args.command == 'movie':
-        if args.movie_file:
-            with open(args.movie_file, 'rb') as f:
-                movie = f.read()
-            await t.interview()
-            params = {
-                'frame_delay': args.movie_delay,
-                'leds_number': t.length,
-                'frames_number': int(len(movie) / 3 / t.length)
-            }
-            await t.set_mode('movie')
-            await t.set_movie_config(params)
-            res = await t.upload_movie(movie)
-        else:
-            res = await t.get_movie_config()
-    elif args.command == 'static':
-        await t.interview()
-        m = re.match(r'(\d+),(\d+),(\d+)', args.colour)
-        if m is not None:
-            rgb = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
-            res = await t.set_static_colour(rgb)
-        else:
-            c = Color(args.colour)
-            rgb = (int(c.red * 255), int(c.green * 255), int(c.blue * 255))
-            res = await t.set_static_colour(rgb)
-    else:
+    try:
+        res = await args.func(t, args)
+    except AttributeError:
         parser.print_help()
         await t.close()
         sys.exit(0)
