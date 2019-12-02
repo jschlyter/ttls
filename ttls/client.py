@@ -166,5 +166,10 @@ class Twinkly(object):
         frame = [colour for _ in range(0, self.length)]
         movie = bytes([item for t in frame for item in t])
         await self.upload_movie(movie)
-        await self.set_movie_config({'frames_number': 1})
+        await self.set_movie_config({
+            'frames_number': 1,
+            'loop_type': 0,
+            'frame_delay': 56,
+            'leds_number': self.length,
+        })
         await self.set_mode('movie')
