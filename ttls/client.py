@@ -35,7 +35,7 @@ from typing import List, Optional, Tuple, Dict, Any, Union
 
 from aiohttp import ClientSession
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('twinkly')
 
 TwinklyColour = Tuple[int, int, int]
 TwinklyFrame = List[TwinklyColour]
@@ -47,7 +47,6 @@ TWINKLY_MODES = ['rt', 'movie', 'off', 'demo', 'effect']
 class Twinkly(object):
 
     def __init__(self, host: str):
-        self.logger = logging.getLogger(self.__class__.__name__)
         self.session = ClientSession(raise_for_status=True)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.headers: Dict[str, str] = {}
@@ -74,26 +73,30 @@ class Twinkly(object):
 
     async def _post(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
-        self.logger.info("POST endpoint %s", endpoint)
+        logger.info("POST endpoint %s", endpoint)
         if 'json' in kwargs:
-            self.logger.info("POST payload %s", kwargs['json'])
+            logger.info("POST payload %s", kwargs['json'])
         headers = kwargs.pop('headers', self.headers)
         async with self.session.post(f"{self.base}/{endpoint}", headers=headers, **kwargs) as r:
             return await r.json()
 
     async def _get(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
-        self.logger.info("GET endpoint %s", endpoint)
+        logger.info("GET endpoint %s", endpoint)
         async with self.session.get(f"{self.base}/{endpoint}", headers=self.headers, **kwargs) as r:
             return await r.json()
 
     async def ensure_token(self) -> str:
+<<<<<<< Local Changes
+        logger.debug("CALL ensure_token()")
+=======
+>>>>>>> External Changes
         if self.expires is None or self.expires <= time.time():
-            self.logger.debug("Authentication token expired, will refresh")
+            logger.debug("Authentication token expired, will refresh")
             await self.login()
             await self.verify_login()
         else:
-            self.logger.debug("Authentication token still valid")
+            logger.debug("Authentication token still valid")
         return self._token
 
     async def login(self) -> None:
