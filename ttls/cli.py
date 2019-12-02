@@ -170,9 +170,6 @@ async def main_loop() -> None:
 
     if args.debug:
         logging.basicConfig(level=logging.DEBUG)
-        requests_log = logging.getLogger("requests.packages.urllib3")
-        requests_log.setLevel(logging.DEBUG)
-        requests_log.propagate = True
 
     t = Twinkly(host=args.host)
 
