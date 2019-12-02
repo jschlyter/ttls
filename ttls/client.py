@@ -87,10 +87,6 @@ class Twinkly(object):
             return await r.json()
 
     async def ensure_token(self) -> str:
-<<<<<<< Local Changes
-        logger.debug("CALL ensure_token()")
-=======
->>>>>>> External Changes
         if self.expires is None or self.expires <= time.time():
             logger.debug("Authentication token expired, will refresh")
             await self.login()
