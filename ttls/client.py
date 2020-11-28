@@ -31,21 +31,20 @@ import logging
 import os
 import socket
 import time
-from typing import List, Optional, Tuple, Dict, Any, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from aiohttp import ClientSession
 
-logger = logging.getLogger('twinkly')
+logger = logging.getLogger("twinkly")
 
 TwinklyColour = Tuple[int, int, int]
 TwinklyFrame = List[TwinklyColour]
 TwinklyResult = Optional[dict]
 
-TWINKLY_MODES = ['rt', 'movie', 'off', 'demo', 'effect']
+TWINKLY_MODES = ["rt", "movie", "off", "demo", "effect"]
 
 
 class Twinkly(object):
-
     def __init__(self, host: str):
         self.session = ClientSession(raise_for_status=True)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -53,7 +52,7 @@ class Twinkly(object):
         self.host = host
         self.rt_port = 7777
         self.expires = None
-        self._token = ''
+        self._token = ""
         self.details: Dict[str, Union[str, int]] = {}
 
     @property
@@ -62,7 +61,7 @@ class Twinkly(object):
 
     @property
     def length(self) -> int:
-        return int(self.details['number_of_led'])
+        return int(self.details["number_of_led"])
 
     async def close(self) -> None:
         await self.session.close()
@@ -74,17 +73,21 @@ class Twinkly(object):
     async def _post(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
         logger.info("POST endpoint %s", endpoint)
-        if 'json' in kwargs:
-            logger.info("POST payload %s", kwargs['json'])
-        headers = kwargs.pop('headers', self.headers)
-        async with self.session.post(f"{self.base}/{endpoint}", headers=headers, **kwargs) as r:
+        if "json" in kwargs:
+            logger.info("POST payload %s", kwargs["json"])
+        headers = kwargs.pop("headers", self.headers)
+        async with self.session.post(
+            f"{self.base}/{endpoint}", headers=headers, **kwargs
+        ) as r:
             return await r.json()
 
     async def _get(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
         logger.info("GET endpoint %s", endpoint)
-        headers = kwargs.pop('headers', self.headers)
-        async with self.session.get(f"{self.base}/{endpoint}", headers=headers, **kwargs) as r:
+        headers = kwargs.pop("headers", self.headers)
+        async with self.session.get(
+            f"{self.base}/{endpoint}", headers=headers, **kwargs
+        ) as r:
             return await r.json()
 
     async def ensure_token(self) -> str:
@@ -101,46 +104,46 @@ class Twinkly(object):
         payload = {"challenge": challenge}
         async with self.session.post(f"{self.base}/login", json=payload) as r:
             data = await r.json()
-        self._token = data['authentication_token']
-        self.headers['X-Auth-Token'] = self._token
-        self.expires = time.time() + data['authentication_token_expires_in']
+        self._token = data["authentication_token"]
+        self.headers["X-Auth-Token"] = self._token
+        self.expires = time.time() + data["authentication_token_expires_in"]
 
     async def logout(self) -> None:
-        await self._post('logout', json={})
-        self._token = ''
+        await self._post("logout", json={})
+        self._token = ""
 
     async def verify_login(self) -> None:
-        await self._post('verify', json={})
+        await self._post("verify", json={})
 
     async def get_name(self) -> Any:
-        return await self._get('device_name')
+        return await self._get("device_name")
 
     async def set_name(self, name: str) -> Any:
-        return await self._post('device_name', json={'name': name})
+        return await self._post("device_name", json={"name": name})
 
     async def reset(self) -> Any:
-        return await self._get('reset')
+        return await self._get("reset")
 
     async def get_network_status(self) -> Any:
-        return await self._get('network/status')
+        return await self._get("network/status")
 
     async def get_firmware_version(self) -> Any:
-        return await self._get('fw/version')
+        return await self._get("fw/version")
 
     async def get_details(self) -> Any:
-        return await self._get('gestalt')
+        return await self._get("gestalt")
 
     async def get_mode(self) -> Any:
-        return await self._get('led/mode')
+        return await self._get("led/mode")
 
     async def set_mode(self, mode: str) -> Any:
-        return await self._post('led/mode', json={'mode': mode})
+        return await self._post("led/mode", json={"mode": mode})
 
     async def get_mqtt(self) -> Any:
-        return await self._get('mqtt/config')
+        return await self._get("mqtt/config")
 
     async def set_mqtt(self, data: dict) -> Any:
-        return await self._post('mqtt/config', json=data)
+        return await self._post("mqtt/config", json=data)
 
     async def send_frame(self, frame: TwinklyFrame) -> None:
         await self.interview()
@@ -154,23 +157,28 @@ class Twinkly(object):
         self.socket.sendto(header + bytes(payload), (self.host, self.rt_port))
 
     async def get_movie_config(self) -> Any:
-        return await self._get('led/movie/config')
+        return await self._get("led/movie/config")
 
     async def set_movie_config(self, data: dict) -> Any:
-        return await self._post('led/movie/config', json=data)
+        return await self._post("led/movie/config", json=data)
 
     async def upload_movie(self, movie: bytes) -> Any:
-        return await self._post('led/movie/full', data=movie,
-                                headers={'Content-Type': 'application/octet-stream'})
+        return await self._post(
+            "led/movie/full",
+            data=movie,
+            headers={"Content-Type": "application/octet-stream"},
+        )
 
     async def set_static_colour(self, colour: TwinklyColour) -> None:
         frame = [colour for _ in range(0, self.length)]
         movie = bytes([item for t in frame for item in t])
         await self.upload_movie(movie)
-        await self.set_movie_config({
-            'frames_number': 1,
-            'loop_type': 0,
-            'frame_delay': 56,
-            'leds_number': self.length,
-        })
-        await self.set_mode('movie')
+        await self.set_movie_config(
+            {
+                "frames_number": 1,
+                "loop_type": 0,
+                "frame_delay": 56,
+                "leds_number": self.length,
+            }
+        )
+        await self.set_mode("movie")

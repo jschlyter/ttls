@@ -74,22 +74,22 @@ async def command_mqtt(t: Twinkly, args: argparse.Namespace):
 async def command_movie(t: Twinkly, args: argparse.Namespace):
     if args.movie_file is None:
         return await t.get_movie_config()
-    with open(args.movie_file, 'rb') as f:
+    with open(args.movie_file, "rb") as f:
         movie = f.read()
     await t.interview()
     params = {
-        'frame_delay': args.movie_delay,
-        'leds_number': t.length,
-        'frames_number': int(len(movie) / 3 / t.length)
+        "frame_delay": args.movie_delay,
+        "leds_number": t.length,
+        "frames_number": int(len(movie) / 3 / t.length),
     }
-    await t.set_mode('movie')
+    await t.set_mode("movie")
     await t.set_movie_config(params)
     return await t.upload_movie(movie)
 
 
 async def command_static(t: Twinkly, args: argparse.Namespace):
     await t.interview()
-    m = re.match(r'(\d+),(\d+),(\d+)', args.colour)
+    m = re.match(r"(\d+),(\d+),(\d+)", args.colour)
     if m is not None:
         rgb = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
     else:
@@ -101,69 +101,74 @@ async def command_static(t: Twinkly, args: argparse.Namespace):
 async def main_loop() -> None:
     """Main function"""
 
-    parser = argparse.ArgumentParser(description='Twinkly Twinkly Little Star')
-    parser.add_argument('--host',
-                        metavar='hostname',
-                        required=True,
-                        help='Device address')
-    parser.add_argument('--debug',
-                        action='store_true',
-                        help="Enable debugging")
-    parser.add_argument('--json',
-                        action='store_true',
-                        help="Output result as compact JSON")
+    parser = argparse.ArgumentParser(description="Twinkly Twinkly Little Star")
+    parser.add_argument(
+        "--host", metavar="hostname", required=True, help="Device address"
+    )
+    parser.add_argument("--debug", action="store_true", help="Enable debugging")
+    parser.add_argument(
+        "--json", action="store_true", help="Output result as compact JSON"
+    )
 
-    subparsers = parser.add_subparsers(dest='command')
+    subparsers = parser.add_subparsers(dest="command")
 
-    parser_network = subparsers.add_parser('network', help="Get network status")
+    parser_network = subparsers.add_parser("network", help="Get network status")
     parser_network.set_defaults(func=command_network)
 
-    parser_firmware = subparsers.add_parser('firmware', help="Get firmware version")
+    parser_firmware = subparsers.add_parser("firmware", help="Get firmware version")
     parser_firmware.set_defaults(func=command_firmware)
 
-    parser_details = subparsers.add_parser('details', help="Get device details")
+    parser_details = subparsers.add_parser("details", help="Get device details")
     parser_details.set_defaults(func=command_details)
 
-    parser_name = subparsers.add_parser('name', help="Get or set device name")
-    parser_name.add_argument('--name', metavar='name', type=str, required=False)
+    parser_name = subparsers.add_parser("name", help="Get or set device name")
+    parser_name.add_argument("--name", metavar="name", type=str, required=False)
     parser_name.set_defaults(func=command_name)
 
-    parser_mode = subparsers.add_parser('mode', help="Get or set LED operation mode")
-    parser_mode.add_argument('--mode', choices=TWINKLY_MODES, required=False)
+    parser_mode = subparsers.add_parser("mode", help="Get or set LED operation mode")
+    parser_mode.add_argument("--mode", choices=TWINKLY_MODES, required=False)
     parser_mode.set_defaults(func=command_mode)
 
-    parser_mqtt = subparsers.add_parser('mqtt', help="Get or set MQTT configuration")
-    parser_mqtt.add_argument('--json',
-                             dest='mqtt_json',
-                             metavar='mqtt',
-                             type=str,
-                             required=False,
-                             help="MQTT config as JSON")
+    parser_mqtt = subparsers.add_parser("mqtt", help="Get or set MQTT configuration")
+    parser_mqtt.add_argument(
+        "--json",
+        dest="mqtt_json",
+        metavar="mqtt",
+        type=str,
+        required=False,
+        help="MQTT config as JSON",
+    )
     parser_mqtt.set_defaults(func=command_mqtt)
 
-    parser_movie = subparsers.add_parser('movie', help="Movie configuration")
-    parser_movie.add_argument('--delay',
-                              dest='movie_delay',
-                              metavar='milliseconds',
-                              type=int,
-                              default=100,
-                              required=False,
-                              help="Delay between frames")
-    parser_movie.add_argument('--file',
-                              dest='movie_file',
-                              metavar='filename',
-                              type=str,
-                              required=False,
-                              help="Movie file")
+    parser_movie = subparsers.add_parser("movie", help="Movie configuration")
+    parser_movie.add_argument(
+        "--delay",
+        dest="movie_delay",
+        metavar="milliseconds",
+        type=int,
+        default=100,
+        required=False,
+        help="Delay between frames",
+    )
+    parser_movie.add_argument(
+        "--file",
+        dest="movie_file",
+        metavar="filename",
+        type=str,
+        required=False,
+        help="Movie file",
+    )
     parser_movie.set_defaults(func=command_movie)
 
-    parser_colour = subparsers.add_parser('static', help="Set static")
-    parser_colour.add_argument('--colour',
-                               dest='colour',
-                               metavar='colour',
-                               type=str,
-                               required=True,
-                               help="Colour")
+    parser_colour = subparsers.add_parser("static", help="Set static")
+    parser_colour.add_argument(
+        "--colour",
+        dest="colour",
+        metavar="colour",
+        type=str,
+        required=True,
+        help="Colour",
+    )
     parser_colour.set_defaults(func=command_static)
 
     args = parser.parse_args()
@@ -181,7 +186,7 @@ async def main_loop() -> None:
         sys.exit(0)
 
     if args.json:
-        print(json.dumps(res, indent=None, separators=(',', ':')))
+        print(json.dumps(res, indent=None, separators=(",", ":")))
     else:
         if res is not None:
             print(json.dumps(res, indent=4))
