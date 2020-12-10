@@ -33,7 +33,7 @@ import socket
 import time
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from aiohttp import ClientSession, ClientResponseError
+from aiohttp import ClientResponseError, ClientSession
 
 logger = logging.getLogger("twinkly")
 
@@ -84,21 +84,7 @@ class Twinkly(object):
                 return await r.json()
         except ClientResponseError as e:
             if e.status == 401:
-                max_retries = 1
-                if retry_num < max_retries:
-                    retry_num += 1
-                    logger.debug(
-                        f"Invalid token for POST. Refreshing token and attempting retry {retry_num} of {max_retries}."
-                    )
-                    await self.refresh_token()
-                    await self._post(
-                        endpoint, headers=self.headers, retry_num=retry_num, **kwargs
-                    )
-                else:
-                    logger.debug(
-                        f"Invalid token for POST. Maximum retries of {max_retries} exceeded."
-                    )
-                    raise e
+                await self._on_status_401(self._post, endpoint, exception=e, **kwargs)
             else:
                 raise e
 
@@ -114,23 +100,27 @@ class Twinkly(object):
                 return await r.json()
         except ClientResponseError as e:
             if e.status == 401:
-                max_retries = 1
-                if retry_num < max_retries:
-                    retry_num += 1
-                    logger.debug(
-                        f"Invalid token for GET. Refreshing token and attempting retry {retry_num} of {max_retries}."
-                    )
-                    await self.refresh_token()
-                    await self._get(
-                        endpoint, headers=self.headers, retry_num=retry_num, **kwargs
-                    )
-                else:
-                    logger.debug(
-                        f"Invalid token for GET. Maximum retries of {max_retries} exceeded."
-                    )
-                    raise e
+                await self._on_status_401(self._get, endpoint, exception=e, **kwargs)
             else:
                 raise e
+
+    async def _on_status_401(self, request_method, endpoint, exception, **kwargs):
+        max_retries = 1
+        retry_num = kwargs.pop("retry_num", 0)
+        if retry_num < max_retries:
+            retry_num += 1
+            logger.debug(
+                f"Invalid token for request. Refreshing token and attempting retry {retry_num} of {max_retries}."
+            )
+            await self.refresh_token()
+            await request_method(
+                endpoint, headers=self.headers, retry_num=retry_num, **kwargs
+            )
+        else:
+            logger.debug(
+                f"Invalid token for request. Maximum retries of {max_retries} exceeded."
+            )
+            raise exception
 
     async def refresh_token(self) -> str:
         await self.login()
