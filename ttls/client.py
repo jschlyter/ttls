@@ -84,7 +84,9 @@ class Twinkly(object):
                 return await r.json()
         except ClientResponseError as e:
             if e.status == 401:
-                await self._on_status_401(self._post, endpoint, exception=e, **kwargs)
+                await self._on_status_401(
+                    self._post, endpoint, exception=e, retry_num=retry_num, **kwargs
+                )
             else:
                 raise e
 
@@ -100,7 +102,9 @@ class Twinkly(object):
                 return await r.json()
         except ClientResponseError as e:
             if e.status == 401:
-                await self._on_status_401(self._get, endpoint, exception=e, **kwargs)
+                await self._on_status_401(
+                    self._get, endpoint, exception=e, retry_num=retry_num, **kwargs
+                )
             else:
                 raise e
 
