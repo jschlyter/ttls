@@ -140,6 +140,7 @@ class Twinkly(object):
 
     async def ensure_token(self) -> str:
         if self.expires is None or self.expires <= time.time():
+            logger.debug("Authentication token expired, will refresh")
             await self.refresh_token()
         else:
             logger.debug("Authentication token still valid")
