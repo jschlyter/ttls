@@ -43,6 +43,38 @@ TwinklyResult = Optional[dict]
 
 TWINKLY_MODES = ["rt", "movie", "off", "demo", "effect"]
 
+TWINKLY_MUSIC_DRIVERS = {
+    "VU Meter": "00000000-0000-0000-0000-000000000001",
+    "Beat Hue": "00000000-0000-0000-0000-000000000002",
+    "Psychedelica": "00000000-0000-0000-0000-000000000003",
+    "Red Vertigo": "00000000-0000-0000-0000-000000000004",
+    "Dancing Bands": "00000000-0000-0000-0000-000000000005",
+    "Diamond Swirl": "00000000-0000-0000-0000-000000000006",
+    "Joyful Stripes": "00000000-0000-0000-0000-000000000007",
+    "Angel Fade": "00000000-0000-0000-0000-000000000008",
+    "Clockwork": "00000000-0000-0000-0000-000000000009",
+    "Sipario": "00000000-0000-0000-0000-00000000000A",
+    "Sunset": "00000000-0000-0000-0000-00000000000B",
+    "Elevator": "00000000-0000-0000-0000-00000000000C",
+}
+
+TWINKLY_MUSIC_DRIVERS_UNOFFICIAL = {
+    "VU Meter 2": "00000000-0000-0000-0000-000001000001",
+    "Beat Hue 2": "00000000-0000-0000-0000-000001000002",
+    "Psychedelica 2": "00000000-0000-0000-0000-000001000003",
+    "Sparkle": "00000000-0000-0000-0000-000001000005",
+    "Sparkle Hue": "00000000-0000-0000-0000-000001000006",
+    "Psycho Sparkle": "00000000-0000-0000-0000-000001000007",
+    "Psycho Hue": "00000000-0000-0000-0000-000001000008",
+    "Red Line": "00000000-0000-0000-0000-000001000009",
+    "Red Vertigo 2": "00000000-0000-0000-0000-000002000004",
+    "Dancing Bands 2": "00000000-0000-0000-0000-000002000005",
+    "Diamond Swirl 2": "00000000-0000-0000-0000-000002000006",
+    "Angel Fade 2": "00000000-0000-0000-0000-000002000008",
+    "Clockwork 2": "00000000-0000-0000-0000-000002000009",
+    "Sunset 2": "00000000-0000-0000-0000-00000200000B",
+}
+
 
 class Twinkly(object):
     def __init__(self, host: str):
@@ -225,3 +257,55 @@ class Twinkly(object):
             }
         )
         await self.set_mode("movie")
+
+    async def summary(self) -> Any:
+        return await self._get("summary")
+
+    async def music_on(self) -> Any:
+        return await self._post("music/enabled", json={"enabled": 1})
+
+    async def music_off(self) -> Any:
+        return await self._post("music/enabled", json={"enabled": 0})
+
+    async def get_music_drivers(self) -> Any:
+        """
+        This endpoint is not currently used by the Twinkly app, but was discovered through
+        trial & error.  It raises a 400 error ('unexpected content-length header') when
+        called from aiohttp, but returns JSON when called via requests.
+        This endpoint was used to map driver names to IDs and identify the 'unofficial'
+        drivers on the device.
+        {"code": 1000, "drivers_number": 26, "unique_ids": [<list of ID strings>]}
+        """
+        # return await self._get("music/drivers")
+        raise NotImplementedError
+
+    async def next_music_driver(self) -> Any:
+        return await self._post("music/drivers/current", json={"action": "next"})
+
+    async def previous_music_driver(self) -> Any:
+        return await self._post("music/drivers/current", json={"action": "prev"})
+
+    async def get_current_music_driver(self) -> Any:
+        return await self._get("music/drivers/current")
+
+    async def set_current_music_driver(self, driver_name: str) -> Any:
+        unique_id = self._music_driver_id(driver_name)
+        if not unique_id:
+            logger.error(f"'{driver_name}' is an invalid music driver")
+            return
+        # An explicit driver cannot be set unless next/previous driver was called first
+        current_driver = await self.get_current_music_driver()
+        if current_driver["handle"] == -1:
+            await self.next_music_driver()
+        return await self._post("music/drivers/current", json={"unique_id": unique_id})
+
+    def _music_driver_id(self, driver_name: str) -> Any:
+        if driver_name in TWINKLY_MUSIC_DRIVERS:
+            return TWINKLY_MUSIC_DRIVERS[driver_name]
+        elif driver_name in TWINKLY_MUSIC_DRIVERS_UNOFFICIAL:
+            logger.warn(
+                f"Music driver '{driver_name}'is defined, but is not officially supported"
+            )
+            return TWINKLY_MUSIC_DRIVERS_UNOFFICIAL[driver_name]
+        else:
+            return None
