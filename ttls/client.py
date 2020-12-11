@@ -31,7 +31,7 @@ import logging
 import os
 import socket
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 from aiohttp import ClientResponseError, ClientSession
 
@@ -108,7 +108,9 @@ class Twinkly(object):
             else:
                 raise e
 
-    async def _on_status_401(self, request_method, endpoint, exception, **kwargs):
+    async def _on_status_401(
+        self, request_method: Callable, endpoint: str, exception: Exception, **kwargs
+    ) -> Any:
         max_retries = 1
         retry_num = kwargs.pop("retry_num", 0)
         if retry_num < max_retries:
