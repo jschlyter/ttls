@@ -31,9 +31,9 @@ import logging
 import os
 import socket
 import time
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from aiohttp import ClientSession
+from aiohttp import ClientResponseError, ClientSession
 
 logger = logging.getLogger("twinkly")
 
@@ -76,25 +76,68 @@ class Twinkly(object):
         if "json" in kwargs:
             logger.info("POST payload %s", kwargs["json"])
         headers = kwargs.pop("headers", self.headers)
-        async with self.session.post(
-            f"{self.base}/{endpoint}", headers=headers, **kwargs
-        ) as r:
-            return await r.json()
+        retry_num = kwargs.pop("retry_num", 0)
+        try:
+            async with self.session.post(
+                f"{self.base}/{endpoint}", headers=headers, **kwargs
+            ) as r:
+                return await r.json()
+        except ClientResponseError as e:
+            if e.status == 401:
+                await self._on_status_401(
+                    self._post, endpoint, exception=e, retry_num=retry_num, **kwargs
+                )
+            else:
+                raise e
 
     async def _get(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
         logger.info("GET endpoint %s", endpoint)
         headers = kwargs.pop("headers", self.headers)
-        async with self.session.get(
-            f"{self.base}/{endpoint}", headers=headers, **kwargs
-        ) as r:
-            return await r.json()
+        retry_num = kwargs.pop("retry_num", 0)
+        try:
+            async with self.session.get(
+                f"{self.base}/{endpoint}", headers=headers, **kwargs
+            ) as r:
+                return await r.json()
+        except ClientResponseError as e:
+            if e.status == 401:
+                await self._on_status_401(
+                    self._get, endpoint, exception=e, retry_num=retry_num, **kwargs
+                )
+            else:
+                raise e
+
+    async def _on_status_401(
+        self, request_method: Callable, endpoint: str, exception: Exception, **kwargs
+    ) -> Any:
+        max_retries = 1
+        retry_num = kwargs.pop("retry_num", 0)
+        if retry_num < max_retries:
+            retry_num += 1
+            logger.debug(
+                f"Invalid token for request. Refreshing token and attempting retry {retry_num} of {max_retries}."
+            )
+            await self.refresh_token()
+            await request_method(
+                endpoint, headers=self.headers, retry_num=retry_num, **kwargs
+            )
+        else:
+            logger.debug(
+                f"Invalid token for request. Maximum retries of {max_retries} exceeded."
+            )
+            raise exception
+
+    async def refresh_token(self) -> str:
+        await self.login()
+        await self.verify_login()
+        logger.debug("Authentication token has been refreshed")
+        return self._token
 
     async def ensure_token(self) -> str:
         if self.expires is None or self.expires <= time.time():
             logger.debug("Authentication token expired, will refresh")
-            await self.login()
-            await self.verify_login()
+            await self.refresh_token()
         else:
             logger.debug("Authentication token still valid")
         return self._token
