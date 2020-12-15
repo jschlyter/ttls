@@ -35,7 +35,12 @@ import sys
 
 from colour import Color
 
-from .client import TWINKLY_MODES, Twinkly
+from .client import (
+    TWINKLY_MODES,
+    TWINKLY_MUSIC_DRIVERS,
+    TWINKLY_MUSIC_DRIVERS_UNOFFICIAL,
+    Twinkly,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -96,6 +101,32 @@ async def command_static(t: Twinkly, args: argparse.Namespace):
         c = Color(args.colour)
         rgb = (int(c.red * 255), int(c.green * 255), int(c.blue * 255))
     return await t.set_static_colour(rgb)
+
+
+async def command_summary(t: Twinkly, args: argparse.Namespace):
+    return await t.summary()
+
+
+async def command_music(t: Twinkly, args: argparse.Namespace):
+    if args.on:
+        return await t.music_on()
+    elif args.off:
+        return await t.music_off()
+    elif args.next:
+        return await t.next_music_driver()
+    elif args.prev:
+        return await t.previous_music_driver()
+    elif args.current:
+        return await t.get_current_music_driver()
+    elif args.driver:
+        return await t.set_current_music_driver(args.driver)
+    elif args.list:
+        if args.list == "all":
+            return {**TWINKLY_MUSIC_DRIVERS, **TWINKLY_MUSIC_DRIVERS_UNOFFICIAL}
+        elif args.list == "official":
+            return TWINKLY_MUSIC_DRIVERS
+        elif args.list == "unofficial":
+            return TWINKLY_MUSIC_DRIVERS_UNOFFICIAL
 
 
 async def main_loop() -> None:
@@ -170,6 +201,53 @@ async def main_loop() -> None:
         help="Colour",
     )
     parser_colour.set_defaults(func=command_static)
+
+    parser_summary = subparsers.add_parser("summary", help="Get device summary")
+    parser_summary.set_defaults(func=command_summary)
+
+    parser_music = subparsers.add_parser("music", help="Twinkly Music device control")
+    parser_music.add_argument(
+        "--on",
+        action="store_true",
+        help="Turn on Twinkly Music",
+    )
+    parser_music.add_argument(
+        "--off",
+        action="store_true",
+        help="Turn off Twinkly Music",
+    )
+    parser_music.add_argument(
+        "--next",
+        action="store_true",
+        help="Select next official music driver",
+    )
+    parser_music.add_argument(
+        "--prev",
+        action="store_true",
+        help="Select previous official music driver",
+    )
+    parser_music.add_argument(
+        "--current",
+        action="store_true",
+        help="Get the current music driver",
+    )
+    parser_music.add_argument(
+        "--driver",
+        metavar="name",
+        type=str,
+        choices=list(TWINKLY_MUSIC_DRIVERS.keys())
+        + list(TWINKLY_MUSIC_DRIVERS_UNOFFICIAL.keys()),
+        help="Set a music driver",
+    )
+    parser_music.add_argument(
+        "--list",
+        metavar="type",
+        choices=["all", "official", "unofficial"],
+        nargs="?",
+        const="all",
+        help="List all, official, or unofficial music drivers (default: all)",
+    )
+    parser_music.set_defaults(func=command_music)
 
     args = parser.parse_args()
 
