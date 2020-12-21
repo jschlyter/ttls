@@ -58,6 +58,25 @@ async def command_details(t: Twinkly, args: argparse.Namespace):
     return await t.get_details()
 
 
+async def command_power(t: Twinkly, args: argparse.Namespace):
+    if args.on:
+        return await t.turn_on()
+    elif args.off:
+        return await t.turn_off()
+    else:
+        on = await t.is_on()
+        if on:
+            return "on"
+        else:
+            return "off"
+
+
+async def command_brightness(t: Twinkly, args: argparse.Namespace):
+    if args.pct is None:
+        return await t.get_brightness()
+    return await t.set_brightness(args.pct)
+
+
 async def command_mode(t: Twinkly, args: argparse.Namespace):
     if args.mode is None:
         return await t.get_mode()
@@ -125,8 +144,35 @@ async def main_loop() -> None:
     parser_name.add_argument("--name", metavar="name", type=str, required=False)
     parser_name.set_defaults(func=command_name)
 
+    parser_power = subparsers.add_parser(
+        "power", help="Get or set device power state ('on', 'off')"
+    )
+    parser_power.add_argument(
+        "--on", action="store_true", required=False, help="Turn device on"
+    )
+    parser_power.add_argument(
+        "--off", action="store_true", required=False, help="Turn device off"
+    )
+    parser_power.set_defaults(func=command_power)
+
+    parser_brightness = subparsers.add_parser(
+        "brightness", help="Get or set LED brightness"
+    )
+    parser_brightness.add_argument(
+        "--pct",
+        metavar="value",
+        type=int,
+        required=False,
+        help="Percent brightness (1-100)",
+    )
+    parser_brightness.set_defaults(func=command_brightness)
+
     parser_mode = subparsers.add_parser("mode", help="Get or set LED operation mode")
-    parser_mode.add_argument("--mode", choices=TWINKLY_MODES, required=False)
+    parser_mode.add_argument(
+        "--mode",
+        choices=TWINKLY_MODES,
+        required=False,
+    )
     parser_mode.set_defaults(func=command_mode)
 
     parser_mqtt = subparsers.add_parser("mqtt", help="Get or set MQTT configuration")
