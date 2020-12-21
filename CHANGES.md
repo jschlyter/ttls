@@ -2,8 +2,8 @@
 
 ## 1.2.0 (2020-12-21)
 
-- Add support from Twinkly Music
-- Improve authentication handling
+- Add support from Twinkly Music (from @MizterB)
+- Improve authentication handling (from @MizterB)
 
 ## 1.1.0 (2019-12-02)
 
