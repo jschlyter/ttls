@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.3.0 (develop)
+
+- Add support for setting brightness (from @MizterB)
+
 ## 1.2.0 (2020-12-21)
 
 - Add support from Twinkly Music (from @MizterB)
