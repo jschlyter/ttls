@@ -3,6 +3,7 @@
 ## 1.3.0 (develop)
 
 - Add support for setting brightness (from @MizterB)
+- Multiple colours in static movie (from @MizterB)
 
 ## 1.2.0 (2020-12-21)
 
