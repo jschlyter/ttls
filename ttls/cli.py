@@ -38,6 +38,7 @@ from colour import Color
 from .client import (
     TWINKLY_MODES,
     TWINKLY_MUSIC_DRIVERS,
+    TWINKLY_MUSIC_DRIVERS_OFFICIAL,
     TWINKLY_MUSIC_DRIVERS_UNOFFICIAL,
     Twinkly,
 )
@@ -141,9 +142,9 @@ async def command_music(t: Twinkly, args: argparse.Namespace):
         return await t.set_current_music_driver(args.driver)
     elif args.list:
         if args.list == "all":
-            return {**TWINKLY_MUSIC_DRIVERS, **TWINKLY_MUSIC_DRIVERS_UNOFFICIAL}
-        elif args.list == "official":
             return TWINKLY_MUSIC_DRIVERS
+        elif args.list == "official":
+            return TWINKLY_MUSIC_DRIVERS_OFFICIAL
         elif args.list == "unofficial":
             return TWINKLY_MUSIC_DRIVERS_UNOFFICIAL
 
@@ -281,8 +282,7 @@ async def main_loop() -> None:
         "--driver",
         metavar="name",
         type=str,
-        choices=list(TWINKLY_MUSIC_DRIVERS.keys())
-        + list(TWINKLY_MUSIC_DRIVERS_UNOFFICIAL.keys()),
+        choices=list(TWINKLY_MUSIC_DRIVERS.keys()),
         help="Set a music driver",
     )
     parser_music.add_argument(

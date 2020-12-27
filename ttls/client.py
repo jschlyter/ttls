@@ -46,7 +46,7 @@ TwinklyResult = Optional[dict]
 TWINKLY_MODES = ["rt", "movie", "off", "demo", "effect"]
 RT_PAYLOAD_MAX_LIGHTS = 300
 
-TWINKLY_MUSIC_DRIVERS = {
+TWINKLY_MUSIC_DRIVERS_OFFICIAL = {
     "VU Meter": "00000000-0000-0000-0000-000000000001",
     "Beat Hue": "00000000-0000-0000-0000-000000000002",
     "Psychedelica": "00000000-0000-0000-0000-000000000003",
@@ -76,6 +76,11 @@ TWINKLY_MUSIC_DRIVERS_UNOFFICIAL = {
     "Angel Fade 2": "00000000-0000-0000-0000-000002000008",
     "Clockwork 2": "00000000-0000-0000-0000-000002000009",
     "Sunset 2": "00000000-0000-0000-0000-00000200000B",
+}
+
+TWINKLY_MUSIC_DRIVERS = {
+    **TWINKLY_MUSIC_DRIVERS_OFFICIAL,
+    **TWINKLY_MUSIC_DRIVERS_UNOFFICIAL,
 }
 
 
@@ -349,8 +354,8 @@ class Twinkly(object):
         return await self._post("music/drivers/current", json={"unique_id": unique_id})
 
     def _music_driver_id(self, driver_name: str) -> Any:
-        if driver_name in TWINKLY_MUSIC_DRIVERS:
-            return TWINKLY_MUSIC_DRIVERS[driver_name]
+        if driver_name in TWINKLY_MUSIC_DRIVERS_OFFICIAL:
+            return TWINKLY_MUSIC_DRIVERS_OFFICIAL[driver_name]
         elif driver_name in TWINKLY_MUSIC_DRIVERS_UNOFFICIAL:
             logger.warn(
                 f"Music driver '{driver_name}'is defined, but is not officially supported"
