@@ -44,6 +44,7 @@ TwinklyFrame = List[TwinklyColour]
 TwinklyResult = Optional[dict]
 
 TWINKLY_MODES = ["rt", "movie", "off", "demo", "effect"]
+RT_PAYLOAD_MAX_LIGHTS = 300
 
 TWINKLY_MUSIC_DRIVERS = {
     "VU Meter": "00000000-0000-0000-0000-000000000001",
@@ -251,6 +252,27 @@ class Twinkly(object):
         for x in frame:
             payload.extend(list(x))
         self.socket.sendto(header + bytes(payload), (self.host, self.rt_port))
+
+    async def send_frame_2(self, frame: TwinklyFrame) -> None:
+        await self.interview()
+        if len(frame) != self.length:
+            raise ValueError("Invalid frame length")
+        token = await self.ensure_token()
+        frame_segments = [
+            frame[i : i + RT_PAYLOAD_MAX_LIGHTS]
+            for i in range(0, len(frame), RT_PAYLOAD_MAX_LIGHTS)
+        ]
+        for i in range(0, len(frame_segments)):
+            header = (
+                bytes([len(frame_segments)])
+                + bytes(base64.b64decode(token))
+                + bytes([0, 0])
+                + bytes([i])
+            )
+            payload = []
+            for x in frame_segments[i]:
+                payload.extend(list(x))
+            self.socket.sendto(header + bytes(payload), (self.host, self.rt_port))
 
     async def get_movie_config(self) -> Any:
         return await self._get("led/movie/config")
