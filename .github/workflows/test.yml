@@ -10,7 +10,6 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - 3.7
           - 3.8
           - 3.9
     steps:
@@ -36,4 +35,4 @@ jobs:
         run: poetry install
       - name: Run pytest
         run: |
-          poetry run pytest -vvv -ra --cov=cryptojwt --isort --black
+          poetry run pytest -v --isort --black
