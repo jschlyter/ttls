@@ -1,6 +1,6 @@
 # Release Notes
 
-## 1.3.0 (develop)
+## 1.3.0 (2021-11-22)
 
 - Add support for setting brightness (from @MizterB)
 - Multiple colours in static movie (from @MizterB)
