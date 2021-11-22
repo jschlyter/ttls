@@ -1,17 +1,13 @@
-name: Test
+name: Tests
 
-on:
-  - push
-  - pull_request
+on: [push, pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version:
-          - 3.8
-          - 3.9
+        python-version: ["3.9", "3.10"]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
@@ -33,6 +29,9 @@ jobs:
           poetry config virtualenvs.in-project true
       - name: Install dependencies
         run: poetry install
-      - name: Run pytest
+      - name: Lint
         run: |
-          poetry run pytest -v --isort --black
+          poetry run pylama ttls
+      - name: Pytest
+        run: |
+          poetry run pytest --isort --black
