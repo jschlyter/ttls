@@ -85,8 +85,13 @@ TWINKLY_MUSIC_DRIVERS = {
 
 
 class Twinkly(object):
-    def __init__(self, host: str):
-        self.session = ClientSession(raise_for_status=True)
+    def __init__(self, host: str, session: Optional[ClientSession] = None):
+        if session:
+            self.session = session
+            self.shared_session = True
+        else:
+            self.session = ClientSession(raise_for_status=True)
+            self.shared_session = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.headers: Dict[str, str] = {}
         self.host = host
@@ -104,7 +109,8 @@ class Twinkly(object):
         return int(self.details["number_of_led"])
 
     async def close(self) -> None:
-        await self.session.close()
+        if not self.shared_session:
+            await self.session.close()
 
     async def interview(self) -> None:
         if len(self.details) == 0:

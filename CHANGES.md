@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.4.0 (develop)
+
+- Support shared `ClientSession`
+
 ## 1.3.0 (2021-11-22)
 
 - Add support for setting brightness (from @MizterB)
