@@ -1,5 +1,10 @@
 # Release Notes
 
+## 1.4.2 (2021-11-24)
+
+- Fix first reponse after authentication failures
+- Tweek log levels
+
 ## 1.4.1 (2021-11-24)
 
 - Export `host` attribute

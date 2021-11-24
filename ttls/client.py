@@ -37,11 +37,12 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from aiohttp import ClientResponseError, ClientSession, ClientTimeout
 from aiohttp.web_exceptions import HTTPUnauthorized
 
-logger = logging.getLogger("twinkly")
+_LOGGER = logging.getLogger(__name__)
 
 TwinklyColour = Tuple[int, int, int]
 TwinklyFrame = List[TwinklyColour]
 TwinklyResult = Optional[dict]
+
 
 TWINKLY_MODES = ["rt", "movie", "off", "demo", "effect"]
 RT_PAYLOAD_MAX_LIGHTS = 300
@@ -126,9 +127,9 @@ class Twinkly(object):
 
     async def _post(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
-        logger.info("POST endpoint %s", endpoint)
+        _LOGGER.debug("POST endpoint %s", endpoint)
         if "json" in kwargs:
-            logger.info("POST payload %s", kwargs["json"])
+            _LOGGER.debug("POST payload %s", kwargs["json"])
         headers = kwargs.pop("headers", self._headers)
         retry_num = kwargs.pop("retry_num", 0)
         try:
@@ -139,6 +140,7 @@ class Twinkly(object):
                 raise_for_status=True,
                 **kwargs,
             ) as r:
+                _LOGGER.debug("POST response %d", r.status)
                 return await r.json()
         except ClientResponseError as e:
             if e.status == HTTPUnauthorized.status_code:
@@ -150,7 +152,7 @@ class Twinkly(object):
 
     async def _get(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
-        logger.info("GET endpoint %s", endpoint)
+        _LOGGER.debug("GET endpoint %s", endpoint)
         headers = kwargs.pop("headers", self._headers)
         retry_num = kwargs.pop("retry_num", 0)
         try:
@@ -161,10 +163,12 @@ class Twinkly(object):
                 raise_for_status=True,
                 **kwargs,
             ) as r:
+                _LOGGER.debug("GET response %d", r.status)
+                print("REPONSE TEXT", await r.text())
                 return await r.json()
         except ClientResponseError as e:
             if e.status == HTTPUnauthorized.status_code:
-                await self._handle_authorized(
+                return await self._handle_authorized(
                     self._get,
                     endpoint,
                     exception=e,
@@ -181,31 +185,31 @@ class Twinkly(object):
         retry_num = kwargs.pop("retry_num", 0)
 
         if retry_num >= max_retries:
-            logger.debug(
+            _LOGGER.debug(
                 f"Invalid token for request. Maximum retries of {max_retries} exceeded."
             )
             raise exception
 
         retry_num += 1
-        logger.debug(
+        _LOGGER.debug(
             f"Invalid token for request. Refreshing token and attempting retry {retry_num} of {max_retries}."
         )
         await self.refresh_token()
-        await request_method(
+        return await request_method(
             endpoint, headers=self._headers, retry_num=retry_num, **kwargs
         )
 
     async def refresh_token(self) -> None:
         await self.login()
         await self.verify_login()
-        logger.debug("Authentication token has been refreshed")
+        _LOGGER.debug("Authentication token refreshed")
 
     async def ensure_token(self) -> str:
         if self._expires is None or self._expires <= time.time():
-            logger.debug("Authentication token expired, will refresh")
+            _LOGGER.debug("Authentication token expired, will refresh")
             await self.refresh_token()
         else:
-            logger.debug("Authentication token still valid")
+            _LOGGER.debug("Authentication token still valid")
         return self._token or ""
 
     async def login(self) -> None:
@@ -247,8 +251,10 @@ class Twinkly(object):
     async def get_details(self) -> Any:
         return await self._get("gestalt")
 
-    async def is_on(self) -> bool:
+    async def is_on(self) -> Optional[bool]:
         mode = await self.get_mode()
+        if mode is None:
+            return None
         return mode.get("mode", "off") != "off"
 
     async def turn_on(self) -> Any:
@@ -375,7 +381,7 @@ class Twinkly(object):
     async def set_current_music_driver(self, driver_name: str) -> Any:
         unique_id = self._music_driver_id(driver_name)
         if not unique_id:
-            logger.error(f"'{driver_name}' is an invalid music driver")
+            _LOGGER.error(f"'{driver_name}' is an invalid music driver")
             return
         # An explicit driver cannot be set unless next/previous driver was called first
         current_driver = await self.get_current_music_driver()
@@ -387,7 +393,7 @@ class Twinkly(object):
         if driver_name in TWINKLY_MUSIC_DRIVERS_OFFICIAL:
             return TWINKLY_MUSIC_DRIVERS_OFFICIAL[driver_name]
         elif driver_name in TWINKLY_MUSIC_DRIVERS_UNOFFICIAL:
-            logger.warn(
+            _LOGGER.warn(
                 f"Music driver '{driver_name}'is defined, but is not officially supported"
             )
             return TWINKLY_MUSIC_DRIVERS_UNOFFICIAL[driver_name]
