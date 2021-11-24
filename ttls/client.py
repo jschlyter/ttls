@@ -34,7 +34,7 @@ import time
 from itertools import cycle, islice
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from aiohttp import ClientResponseError, ClientSession
+from aiohttp import ClientResponseError, ClientSession, ClientTimeout
 from aiohttp.web_exceptions import HTTPUnauthorized
 
 logger = logging.getLogger("twinkly")
@@ -83,14 +83,22 @@ TWINKLY_MUSIC_DRIVERS = {
     **TWINKLY_MUSIC_DRIVERS_UNOFFICIAL,
 }
 
+DEFAULT_TIMEOUT = 3
+
 
 class Twinkly(object):
-    def __init__(self, host: str, session: Optional[ClientSession] = None):
+    def __init__(
+        self,
+        host: str,
+        session: Optional[ClientSession] = None,
+        timeout: Optional[int] = None,
+    ):
+        self.timeout = ClientTimeout(total=timeout or DEFAULT_TIMEOUT)
         if session:
             self.session = session
             self.shared_session = True
         else:
-            self.session = ClientSession(raise_for_status=True)
+            self.session = ClientSession(raise_for_status=True, timeout=self.timeout)
             self.shared_session = False
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.headers: Dict[str, str] = {}
@@ -125,7 +133,11 @@ class Twinkly(object):
         retry_num = kwargs.pop("retry_num", 0)
         try:
             async with self.session.post(
-                f"{self.base}/{endpoint}", headers=headers, **kwargs
+                f"{self.base}/{endpoint}",
+                headers=headers,
+                timeout=self.timeout,
+                raise_for_status=True,
+                **kwargs,
             ) as r:
                 return await r.json()
         except ClientResponseError as e:
@@ -143,13 +155,21 @@ class Twinkly(object):
         retry_num = kwargs.pop("retry_num", 0)
         try:
             async with self.session.get(
-                f"{self.base}/{endpoint}", headers=headers, **kwargs
+                f"{self.base}/{endpoint}",
+                headers=headers,
+                timeout=self.timeout,
+                raise_for_status=True,
+                **kwargs,
             ) as r:
                 return await r.json()
         except ClientResponseError as e:
             if e.status == HTTPUnauthorized.status_code:
                 await self._handle_authorized(
-                    self._get, endpoint, exception=e, retry_num=retry_num, **kwargs
+                    self._get,
+                    endpoint,
+                    exception=e,
+                    retry_num=retry_num,
+                    **kwargs,
                 )
             else:
                 raise e
@@ -192,7 +212,12 @@ class Twinkly(object):
     async def login(self) -> None:
         challenge = base64.b64encode(os.urandom(32)).decode()
         payload = {"challenge": challenge}
-        async with self.session.post(f"{self.base}/login", json=payload) as r:
+        async with self.session.post(
+            f"{self.base}/login",
+            json=payload,
+            timeout=self.timeout,
+            raise_for_status=True,
+        ) as r:
             data = await r.json()
         self._token = data["authentication_token"]
         self.headers["X-Auth-Token"] = self._token
