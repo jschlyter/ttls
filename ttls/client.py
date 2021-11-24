@@ -98,7 +98,7 @@ class Twinkly(object):
             self._session = session
             self._shared_session = True
         else:
-            self._session = ClientSession(raise_for_status=True, timeout=self.timeout)
+            self._session = ClientSession()
             self._shared_session = False
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._headers: Dict[str, str] = {}
