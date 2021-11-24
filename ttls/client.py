@@ -105,7 +105,7 @@ class Twinkly(object):
         self._host = host
         self._rt_port = 7777
         self._expires = None
-        self._token = ""
+        self._token = None
         self._details: Dict[str, Union[str, int]] = {}
 
     @property
@@ -195,11 +195,10 @@ class Twinkly(object):
             endpoint, headers=self._headers, retry_num=retry_num, **kwargs
         )
 
-    async def refresh_token(self) -> str:
+    async def refresh_token(self) -> None:
         await self.login()
         await self.verify_login()
         logger.debug("Authentication token has been refreshed")
-        return self._token
 
     async def ensure_token(self) -> str:
         if self._expires is None or self._expires <= time.time():
@@ -207,7 +206,7 @@ class Twinkly(object):
             await self.refresh_token()
         else:
             logger.debug("Authentication token still valid")
-        return self._token
+        return self._token or ""
 
     async def login(self) -> None:
         challenge = base64.b64encode(os.urandom(32)).decode()
@@ -225,7 +224,7 @@ class Twinkly(object):
 
     async def logout(self) -> None:
         await self._post("logout", json={})
-        self._token = ""
+        self._token = None
 
     async def verify_login(self) -> None:
         await self._post("verify", json={})
