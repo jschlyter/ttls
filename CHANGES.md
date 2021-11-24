@@ -1,6 +1,6 @@
 # Release Notes
 
-## 1.4.0 (develop)
+## 1.4.0 (2021-11-24)
 
 - Support shared `ClientSession`
 - Lower timeout (default 3 seconds)
