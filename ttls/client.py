@@ -95,44 +95,44 @@ class Twinkly(object):
     ):
         self.timeout = ClientTimeout(total=timeout or DEFAULT_TIMEOUT)
         if session:
-            self.session = session
-            self.shared_session = True
+            self._session = session
+            self._shared_session = True
         else:
-            self.session = ClientSession(raise_for_status=True, timeout=self.timeout)
-            self.shared_session = False
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.headers: Dict[str, str] = {}
-        self.host = host
-        self.rt_port = 7777
-        self.expires = None
+            self._session = ClientSession(raise_for_status=True, timeout=self.timeout)
+            self._shared_session = False
+        self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self._headers: Dict[str, str] = {}
+        self._host = host
+        self._rt_port = 7777
+        self._expires = None
         self._token = ""
-        self.details: Dict[str, Union[str, int]] = {}
+        self._details: Dict[str, Union[str, int]] = {}
 
     @property
     def base(self) -> str:
-        return f"http://{self.host}/xled/v1"
+        return f"http://{self._host}/xled/v1"
 
     @property
     def length(self) -> int:
-        return int(self.details["number_of_led"])
+        return int(self._details["number_of_led"])
 
     async def close(self) -> None:
-        if not self.shared_session:
-            await self.session.close()
+        if not self._shared_session:
+            await self._session.close()
 
     async def interview(self) -> None:
-        if len(self.details) == 0:
-            self.details = await self.get_details()
+        if len(self._details) == 0:
+            self._details = await self.get_details()
 
     async def _post(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
         logger.info("POST endpoint %s", endpoint)
         if "json" in kwargs:
             logger.info("POST payload %s", kwargs["json"])
-        headers = kwargs.pop("headers", self.headers)
+        headers = kwargs.pop("headers", self._headers)
         retry_num = kwargs.pop("retry_num", 0)
         try:
-            async with self.session.post(
+            async with self._session.post(
                 f"{self.base}/{endpoint}",
                 headers=headers,
                 timeout=self.timeout,
@@ -151,10 +151,10 @@ class Twinkly(object):
     async def _get(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
         logger.info("GET endpoint %s", endpoint)
-        headers = kwargs.pop("headers", self.headers)
+        headers = kwargs.pop("headers", self._headers)
         retry_num = kwargs.pop("retry_num", 0)
         try:
-            async with self.session.get(
+            async with self._session.get(
                 f"{self.base}/{endpoint}",
                 headers=headers,
                 timeout=self.timeout,
@@ -192,7 +192,7 @@ class Twinkly(object):
         )
         await self.refresh_token()
         await request_method(
-            endpoint, headers=self.headers, retry_num=retry_num, **kwargs
+            endpoint, headers=self._headers, retry_num=retry_num, **kwargs
         )
 
     async def refresh_token(self) -> str:
@@ -202,7 +202,7 @@ class Twinkly(object):
         return self._token
 
     async def ensure_token(self) -> str:
-        if self.expires is None or self.expires <= time.time():
+        if self._expires is None or self._expires <= time.time():
             logger.debug("Authentication token expired, will refresh")
             await self.refresh_token()
         else:
@@ -212,7 +212,7 @@ class Twinkly(object):
     async def login(self) -> None:
         challenge = base64.b64encode(os.urandom(32)).decode()
         payload = {"challenge": challenge}
-        async with self.session.post(
+        async with self._session.post(
             f"{self.base}/login",
             json=payload,
             timeout=self.timeout,
@@ -220,8 +220,8 @@ class Twinkly(object):
         ) as r:
             data = await r.json()
         self._token = data["authentication_token"]
-        self.headers["X-Auth-Token"] = self._token
-        self.expires = time.time() + data["authentication_token_expires_in"]
+        self._headers["X-Auth-Token"] = self._token
+        self._expires = time.time() + data["authentication_token_expires_in"]
 
     async def logout(self) -> None:
         await self._post("logout", json={})
@@ -287,7 +287,7 @@ class Twinkly(object):
         payload = []
         for x in frame:
             payload.extend(list(x))
-        self.socket.sendto(header + bytes(payload), (self.host, self.rt_port))
+        self._socket.sendto(header + bytes(payload), (self._host, self._rt_port))
 
     async def send_frame_2(self, frame: TwinklyFrame) -> None:
         await self.interview()
@@ -308,7 +308,7 @@ class Twinkly(object):
             payload = []
             for x in frame_segments[i]:
                 payload.extend(list(x))
-            self.socket.sendto(header + bytes(payload), (self.host, self.rt_port))
+            self._socket.sendto(header + bytes(payload), (self._host, self._rt_port))
 
     async def get_movie_config(self) -> Any:
         return await self._get("led/movie/config")
