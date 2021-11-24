@@ -93,7 +93,8 @@ class Twinkly(object):
         session: Optional[ClientSession] = None,
         timeout: Optional[int] = None,
     ):
-        self.timeout = ClientTimeout(total=timeout or DEFAULT_TIMEOUT)
+        self.host = host
+        self._timeout = ClientTimeout(total=timeout or DEFAULT_TIMEOUT)
         if session:
             self._session = session
             self._shared_session = True
@@ -102,7 +103,6 @@ class Twinkly(object):
             self._shared_session = False
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._headers: Dict[str, str] = {}
-        self._host = host
         self._rt_port = 7777
         self._expires = None
         self._token = None
@@ -110,7 +110,7 @@ class Twinkly(object):
 
     @property
     def base(self) -> str:
-        return f"http://{self._host}/xled/v1"
+        return f"http://{self.host}/xled/v1"
 
     @property
     def length(self) -> int:
@@ -135,7 +135,7 @@ class Twinkly(object):
             async with self._session.post(
                 f"{self.base}/{endpoint}",
                 headers=headers,
-                timeout=self.timeout,
+                timeout=self._timeout,
                 raise_for_status=True,
                 **kwargs,
             ) as r:
@@ -157,7 +157,7 @@ class Twinkly(object):
             async with self._session.get(
                 f"{self.base}/{endpoint}",
                 headers=headers,
-                timeout=self.timeout,
+                timeout=self._timeout,
                 raise_for_status=True,
                 **kwargs,
             ) as r:
@@ -214,7 +214,7 @@ class Twinkly(object):
         async with self._session.post(
             f"{self.base}/login",
             json=payload,
-            timeout=self.timeout,
+            timeout=self._timeout,
             raise_for_status=True,
         ) as r:
             data = await r.json()
@@ -286,7 +286,7 @@ class Twinkly(object):
         payload = []
         for x in frame:
             payload.extend(list(x))
-        self._socket.sendto(header + bytes(payload), (self._host, self._rt_port))
+        self._socket.sendto(header + bytes(payload), (self.host, self._rt_port))
 
     async def send_frame_2(self, frame: TwinklyFrame) -> None:
         await self.interview()
@@ -307,7 +307,7 @@ class Twinkly(object):
             payload = []
             for x in frame_segments[i]:
                 payload.extend(list(x))
-            self._socket.sendto(header + bytes(payload), (self._host, self._rt_port))
+            self._socket.sendto(header + bytes(payload), (self.host, self._rt_port))
 
     async def get_movie_config(self) -> Any:
         return await self._get("led/movie/config")

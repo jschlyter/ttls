@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.4.1 (2021-11-24)
+
+- Export `host` attribute
+
 ## 1.4.0 (2021-11-24)
 
 - Support shared `ClientSession`
