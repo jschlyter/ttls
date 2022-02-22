@@ -164,7 +164,6 @@ class Twinkly(object):
                 **kwargs,
             ) as r:
                 _LOGGER.debug("GET response %d", r.status)
-                print("REPONSE TEXT", await r.text())
                 return await r.json()
         except ClientResponseError as e:
             if e.status == HTTPUnauthorized.status_code:
