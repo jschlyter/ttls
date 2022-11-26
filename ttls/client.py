@@ -398,3 +398,10 @@ class Twinkly(object):
             return TWINKLY_MUSIC_DRIVERS_UNOFFICIAL[driver_name]
         else:
             return None
+
+    async def get_saved_movies(self) -> Any:
+        return await self._get("movies")
+         
+    async def get_current_movie(self) -> Any:
+        return await self._get("movies/current")
+
