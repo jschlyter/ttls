@@ -330,22 +330,15 @@ class Twinkly(object):
     async def set_static_colour(
         self, colour: Union[TwinklyColour, List[TwinklyColour]]
     ) -> None:
-        if isinstance(colour, Tuple):
-            sequence = [colour]
+        if isinstance(colour, List):
+            sequence = colour[0]
         else:
             sequence = colour
-        frame = list(islice(cycle(sequence), self.length))
-        movie = bytes([item for t in frame for item in t])
-        await self.upload_movie(movie)
-        await self.set_movie_config(
-            {
-                "frames_number": 1,
-                "loop_type": 0,
-                "frame_delay": 1000,
-                "leds_number": self.length,
-            }
-        )
-        await self.set_mode("movie")
+        if len(sequence) == 4:
+            sequence = sequence[1:]
+
+        await t._post("led/color", json={"red":sequence[0],"green":sequence[1],"blue": sequence[2]})
+        await t.set_mode("color")
 
     async def summary(self) -> Any:
         return await self._get("summary")
