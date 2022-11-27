@@ -337,8 +337,8 @@ class Twinkly(object):
         if len(sequence) == 4:
             sequence = sequence[1:]
 
-        await t._post("led/color", json={"red":sequence[0],"green":sequence[1],"blue": sequence[2]})
-        await t.set_mode("color")
+        await self._post("led/color", json={"red":sequence[0],"green":sequence[1],"blue": sequence[2]})
+        await self.set_mode("color")
 
     async def summary(self) -> Any:
         return await self._get("summary")
