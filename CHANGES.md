@@ -1,5 +1,11 @@
 # Release Notes
 
+## 1.5.0 (develop)
+
+- Get saved and current movies (from @Olen)
+- Actually set a static colour (from @Olen)
+- Require Python 3.9
+
 ## 1.4.2 (2021-11-24)
 
 - Fix first reponse after authentication failures
