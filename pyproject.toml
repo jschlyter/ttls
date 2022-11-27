@@ -17,17 +17,27 @@ python = "^3.8"
 aiohttp = "^3.7.3"
 colour = "^0.1.5"
 
-[tool.poetry.dev-dependencies]
-black = "^20.8b1"
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+pylama = "^8.4.1"
+black = "^22.10.0"
+isort = "^5.10.1"
 pytest-black = "^0.3.12"
-isort = "^5.6.4"
-pytest-isort = "^1.2.0"
-pytest = "^6.1.2"
-pylama = "^7.7.1"
-
-[tool.isort]
-profile = "black"
+pytest-isort = "^3.1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.pylama]
+max_line_length = 132
+
+[tool.pylama.linter.pycodestyle]
+ignore = "E203,W503"
+
+[tool.pylama.linter.mccabe]
+complexity = 40
+ignore = "C901"
