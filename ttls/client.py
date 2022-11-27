@@ -99,7 +99,7 @@ class Twinkly(object):
             self._session = session
             self._shared_session = True
         else:
-            self._session = ClientSession()
+            self._session = None
             self._shared_session = False
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._headers: Dict[str, str] = {}
@@ -118,11 +118,14 @@ class Twinkly(object):
 
     async def close(self) -> None:
         if not self._shared_session:
-            await self._session.close()
+            await self._get_session().close()
 
     async def interview(self) -> None:
         if len(self._details) == 0:
             self._details = await self.get_details()
+
+    def _get_session(self):
+        return self._session or ClientSession()
 
     async def _post(self, endpoint: str, **kwargs) -> Any:
         await self.ensure_token()
@@ -132,7 +135,7 @@ class Twinkly(object):
         headers = kwargs.pop("headers", self._headers)
         retry_num = kwargs.pop("retry_num", 0)
         try:
-            async with self._session.post(
+            async with self._get_session().post(
                 f"{self.base}/{endpoint}",
                 headers=headers,
                 timeout=self._timeout,
@@ -155,7 +158,7 @@ class Twinkly(object):
         headers = kwargs.pop("headers", self._headers)
         retry_num = kwargs.pop("retry_num", 0)
         try:
-            async with self._session.get(
+            async with self._get_session().get(
                 f"{self.base}/{endpoint}",
                 headers=headers,
                 timeout=self._timeout,
@@ -213,7 +216,7 @@ class Twinkly(object):
     async def login(self) -> None:
         challenge = base64.b64encode(os.urandom(32)).decode()
         payload = {"challenge": challenge}
-        async with self._session.post(
+        async with self._get_session().post(
             f"{self.base}/login",
             json=payload,
             timeout=self._timeout,
