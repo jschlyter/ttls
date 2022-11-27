@@ -337,7 +337,10 @@ class Twinkly(object):
         if len(sequence) == 4:
             sequence = sequence[1:]
 
-        await self._post("led/color", json={"red":sequence[0],"green":sequence[1],"blue": sequence[2]})
+        await self._post(
+            "led/color",
+            json={"red": sequence[0], "green": sequence[1], "blue": sequence[2]},
+        )
         await self.set_mode("color")
 
     async def summary(self) -> Any:
@@ -394,7 +397,6 @@ class Twinkly(object):
 
     async def get_saved_movies(self) -> Any:
         return await self._get("movies")
-         
+
     async def get_current_movie(self) -> Any:
         return await self._get("movies/current")
-
