@@ -361,7 +361,7 @@ class Twinkly(object):
             }
         )
         await self.set_mode("movie")
-      
+
     async def summary(self) -> Any:
         return await self._get("summary")
 
