@@ -3,7 +3,7 @@ import unittest
 from ttls.client import Twinkly
 
 
-class TestTwinkly(unittest.TestCase):
+class TestTwinklyConfig(unittest.TestCase):
     def setUp(self):
         self.client = Twinkly(host="192.0.2.1")
 
