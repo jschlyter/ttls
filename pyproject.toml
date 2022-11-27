@@ -25,9 +25,16 @@ pytest-isort = "^1.2.0"
 pytest = "^6.1.2"
 pylama = "^7.7.1"
 
-[tool.isort]
-profile = "black"
-
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.pylama.linter.pycodestyle]
+max_line_length = 132
+ignore = ["W606", "E203", "W503"]
+
+[tool.pylama.linter.mccabe]
+complexity = 40
