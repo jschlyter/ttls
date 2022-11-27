@@ -133,6 +133,8 @@ class Twinkly(object):
     def default_mode(self, mode: str) -> str:
         if mode not in TWINKLY_MODES:
             raise ValueError("Invalid mode")
+        if mode == "off":
+            _LOGGER.warning("Setting default mode to off")
         self._default_mode = mode
 
     async def close(self) -> None:
