@@ -3,7 +3,7 @@
 ## 1.5.0 (develop)
 
 - Get saved and current movies (from @Olen)
-- Actually set a static colour (from @Olen)
+- Actually set a static colour (from @Olen), old function available as `set_cycle_colours`
 - Require Python 3.9
 
 ## 1.4.2 (2021-11-24)
