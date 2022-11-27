@@ -43,7 +43,15 @@ TwinklyFrame = List[TwinklyColour]
 TwinklyResult = Optional[dict]
 
 
-TWINKLY_MODES = ["rt", "movie", "off", "demo", "effect"]
+TWINKLY_MODES = [
+    "color",
+    "demo",
+    "effect",
+    "movie",
+    "off",
+    "playlist",
+    "rt",
+]
 RT_PAYLOAD_MAX_LIGHTS = 300
 
 TWINKLY_MUSIC_DRIVERS_OFFICIAL = {
@@ -107,6 +115,7 @@ class Twinkly(object):
         self._expires = None
         self._token = None
         self._details: Dict[str, Union[str, int]] = {}
+        self._default_mode = "movie"
 
     @property
     def base(self) -> str:
@@ -115,6 +124,18 @@ class Twinkly(object):
     @property
     def length(self) -> int:
         return int(self._details["number_of_led"])
+
+    @property
+    def default_mode(self) -> str:
+        return self._default_mode
+
+    @default_mode.setter
+    def default_mode(self, mode: str) -> str:
+        if mode not in TWINKLY_MODES:
+            raise ValueError("Invalid mode")
+        if mode == "off":
+            _LOGGER.warning("Setting default mode to off")
+        self._default_mode = mode
 
     async def close(self) -> None:
         if not self._shared_session:
@@ -259,7 +280,7 @@ class Twinkly(object):
         return mode.get("mode", "off") != "off"
 
     async def turn_on(self) -> Any:
-        return await self.set_mode("movie")
+        return await self.set_mode(self._default_mode)
 
     async def turn_off(self) -> Any:
         return await self.set_mode("off")
