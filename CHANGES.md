@@ -1,6 +1,10 @@
 # Release Notes
 
-## 1.5.0 (develop)
+## 1.5.1 (2022-11-28)
+
+- Relax `aiohttp` dependency
+
+## 1.5.0 (2022-11-28)
 
 - Get saved and current movies (from @Olen)
 - Actually set a static colour (from @Olen), old function available as `set_cycle_colours`
