@@ -4,6 +4,7 @@
 
 - Get saved and current movies (from @Olen)
 - Actually set a static colour (from @Olen), old function available as `set_cycle_colours`
+- Support setting default mode for `turn_on` (suggested @Mr-Groch)
 - Require Python 3.9
 
 ## 1.4.2 (2021-11-24)
