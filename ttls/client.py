@@ -450,3 +450,33 @@ class Twinkly(object):
 
     async def get_current_color(self) -> Any:
         return await self._get("led/color")
+
+    async def get_predefined_effects(self) -> Any:
+        """Get the list of predefined effects."""
+        return await self._get("led/effects")
+
+    async def get_current_predefined_effect(self) -> Any:
+        """Get current effect."""
+        return await self._get("led/effects/current")
+
+    async def set_current_predefined_effect(self, effect_id: int) -> None:
+        """Set current effect."""
+        await self._post(
+            "led/effects/current",
+            json={"effect_id": effect_id},
+        )
+
+    async def get_playlist(self) -> Any:
+        """Get the playlist."""
+        return await self._get("playlist")
+
+    async def get_current_playlist_entry(self) -> Any:
+        """Get current playlist."""
+        return await self._get("playlist/current")
+
+    async def set_current_playlist_entry(self, entry_id: int) -> None:
+        """Jump to specific effect in the playlist."""
+        await self._post(
+            "playlist/current",
+            json={"id": entry_id},
+        )
