@@ -447,3 +447,6 @@ class Twinkly(object):
 
     async def set_current_movie(self, movie_id: int) -> Any:
         return await self._post("movies/current", json={"id": movie_id})
+
+    async def get_current_color(self) -> Any:
+        return await self._get("led/color")
