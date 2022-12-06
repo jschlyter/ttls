@@ -447,7 +447,7 @@ class Twinkly(object):
 
     async def set_current_movie(self, movie_id: int) -> Any:
         return await self._post("movies/current", json={"id": movie_id})
-      
+
     async def get_predefined_effects(self) -> Any:
         """Get the list of predefined effects."""
         return await self._get("led/effects")
@@ -462,7 +462,7 @@ class Twinkly(object):
             "led/effects/current",
             json={"effect_id": effect_id},
         )
-      
+
     async def get_playlist(self) -> Any:
         """Get the playlist."""
         return await self._get("playlist")
