@@ -1,5 +1,10 @@
 # Release Notes
 
+## 1.6.0 (2022-12-06)
+
+- Add handling of predefined effects and playlists (from @Olen)
+- Get current color (from @Olen)
+
 ## 1.5.1 (2022-11-28)
 
 - Relax `aiohttp` dependency
