@@ -1,5 +1,9 @@
 # Release Notes
 
+## 1.6.1 (2022-12-07)
+
+- Fix spelling inconsistency in function name
+
 ## 1.6.0 (2022-12-06)
 
 - Add handling of predefined effects and playlists (from @Olen)
