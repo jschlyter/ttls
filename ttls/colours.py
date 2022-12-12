@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple, Union, List
+from typing import Dict, Optional, Tuple, Union
 
 ColourDict = Dict[str, int]
 ColourTuple = Union[Tuple[int, int, int], Tuple[int, int, int, int]]

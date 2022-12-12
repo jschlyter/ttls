@@ -386,7 +386,7 @@ class Twinkly(object):
             sequence = [colour]
         elif isinstance(colour, List):
             if isinstance(colour[0], TwinklyColour):
-                sequence = [c.as_twinkly_tuple() for c in color]
+                sequence = [c.as_twinkly_tuple() for c in colour]
             else:
                 sequence = colour
         else:
