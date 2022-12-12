@@ -1,7 +1,7 @@
 import unittest
+from typing import Dict, List, Optional, Tuple, Union
 
 from ttls.colours import TwinklyColour
-from typing import Dict, Optional, Tuple, Union, List
 
 
 class TestTwinklyColours(unittest.TestCase):
