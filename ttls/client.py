@@ -37,10 +37,11 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 from aiohttp import ClientResponseError, ClientSession, ClientTimeout
 from aiohttp.web_exceptions import HTTPUnauthorized
 
+from .colours import TwinklyColour, TwinklyColourTuple
+
 _LOGGER = logging.getLogger(__name__)
 
-TwinklyColour = Tuple[int, int, int]
-TwinklyFrame = List[TwinklyColour]
+TwinklyFrame = List[TwinklyColourTuple]
 TwinklyResult = Optional[dict]
 
 
@@ -352,28 +353,44 @@ class Twinkly(object):
         )
 
     async def set_static_colour(
-        self, colour: Union[TwinklyColour, List[TwinklyColour]]
+        self,
+        colour: Union[
+            TwinklyColour,
+            TwinklyColourTuple,
+            List[TwinklyColour],
+            List[TwinklyColourTuple],
+        ],
     ) -> None:
         if isinstance(colour, List):
-            sequence = colour[0]
-        else:
-            sequence = colour
-        if len(sequence) == 4:
-            sequence = sequence[1:]
-
+            colour = colour[0]
+        if isinstance(colour, Tuple):
+            colour = TwinklyColour.from_twinkly_tuple(colour)
         await self._post(
             "led/color",
-            json={"red": sequence[0], "green": sequence[1], "blue": sequence[2]},
+            json={"red": colour.red, "green": colour.green, "blue": colour.blue},
         )
         await self.set_mode("color")
 
     async def set_cycle_colours(
-        self, colour: Union[TwinklyColour, List[TwinklyColour]]
+        self,
+        colour: Union[
+            TwinklyColour,
+            TwinklyColourTuple,
+            List[TwinklyColour],
+            List[TwinklyColourTuple],
+        ],
     ) -> None:
-        if isinstance(colour, Tuple):
+        if isinstance(colour, TwinklyColour):
+            sequence = [colour.as_twinkly_tuple()]
+        elif isinstance(colour, Tuple):
             sequence = [colour]
+        elif isinstance(colour, List):
+            if isinstance(colour[0], TwinklyColour):
+                sequence = [c.as_twinkly_tuple() for c in colour]
+            else:
+                sequence = colour
         else:
-            sequence = colour
+            raise TypeError("Unknown colour format")
         frame = list(islice(cycle(sequence), self.length))
         movie = bytes([item for t in frame for item in t])
         await self.upload_movie(movie)
