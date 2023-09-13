@@ -2,7 +2,7 @@
 
 [tool.poetry]
 name = "ttls"
-version = "1.6.1"
+version = "1.7.0"
 description = "Twinkly Twinkly Little Star"
 authors = ["Jakob Schlyter <jakob@schlyter.se>"]
 license = "BSD"
@@ -18,7 +18,7 @@ colour = "^0.1.5"
 aiohttp = "^3.8.1"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.2.0"
+pytest = "^7.4.2"
 pylama = "^8.4.1"
 black = "^22.10.0"
 isort = "^5.10.1"
