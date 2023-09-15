@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Twinkly Twinkly Little Star
 https://github.com/jschlyter/ttls
@@ -33,7 +35,7 @@ import logging
 import re
 import sys
 
-from colour import Color
+from colours import TwinklyColour
 
 from .client import (
     TWINKLY_MODES,
@@ -118,7 +120,7 @@ async def command_static(t: Twinkly, args: argparse.Namespace):
     if m is not None:
         rgb = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
     else:
-        c = Color(args.colour)
+        c = TwinklyColor(args.colour)
         rgb = (int(c.red * 255), int(c.green * 255), int(c.blue * 255))
     return await t.set_static_colour(rgb)
 
