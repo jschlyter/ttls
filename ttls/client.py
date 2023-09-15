@@ -265,7 +265,9 @@ class Twinkly(object):
         return self._valid_response(await self._get("device_name"))
 
     async def set_name(self, name: str) -> Any:
-        return self._valid_response(await self._post("device_name", json={"name": name}))
+        return self._valid_response(
+            await self._post("device_name", json={"name": name})
+        )
 
     async def reset(self) -> Any:
         return self._valid_response(await self._get("reset"))
@@ -295,9 +297,9 @@ class Twinkly(object):
         return self._valid_response(await self._get("led/out/brightness"))
 
     async def set_brightness(self, percent: int) -> Any:
-        return self._valid_response(await self._post(
-            "led/out/brightness", json={"value": percent, "type": "A"}
-        ))
+        return self._valid_response(
+            await self._post("led/out/brightness", json={"value": percent, "type": "A"})
+        )
 
     async def get_mode(self) -> Any:
         return self._valid_response(await self._get("led/mode"))
@@ -350,11 +352,13 @@ class Twinkly(object):
         return self._valid_response(await self._post("led/movie/config", json=data))
 
     async def upload_movie(self, movie: bytes) -> Any:
-        return self._valid_response(await self._post(
-            "led/movie/full",
-            data=movie,
-            headers={"Content-Type": "application/octet-stream"},
-        ))
+        return self._valid_response(
+            await self._post(
+                "led/movie/full",
+                data=movie,
+                headers={"Content-Type": "application/octet-stream"},
+            )
+        )
 
     async def set_static_colour(
         self,
@@ -412,10 +416,14 @@ class Twinkly(object):
         return self._valid_response(await self._get("summary"))
 
     async def music_on(self) -> Any:
-        return self._valid_response(await self._post("music/enabled", json={"enabled": 1}))
+        return self._valid_response(
+            await self._post("music/enabled", json={"enabled": 1})
+        )
 
     async def music_off(self) -> Any:
-        return self._valid_response(await self._post("music/enabled", json={"enabled": 0}))
+        return self._valid_response(
+            await self._post("music/enabled", json={"enabled": 0})
+        )
 
     async def get_music_drivers(self) -> Any:
         """
@@ -430,10 +438,14 @@ class Twinkly(object):
         raise NotImplementedError
 
     async def next_music_driver(self) -> Any:
-        return self._valid_response(await self._post("music/drivers/current", json={"action": "next"}))
+        return self._valid_response(
+            await self._post("music/drivers/current", json={"action": "next"})
+        )
 
     async def previous_music_driver(self) -> Any:
-        return self._valid_response(await self._post("music/drivers/current", json={"action": "prev"}))
+        return self._valid_response(
+            await self._post("music/drivers/current", json={"action": "prev"})
+        )
 
     async def get_current_music_driver(self) -> Any:
         return self._valid_response(await self._get("music/drivers/current"))
@@ -447,7 +459,9 @@ class Twinkly(object):
         current_driver = await self.get_current_music_driver()
         if current_driver["handle"] == -1:
             await self.next_music_driver()
-        return self._valid_response(await self._post("music/drivers/current", json={"unique_id": unique_id}))
+        return self._valid_response(
+            await self._post("music/drivers/current", json={"unique_id": unique_id})
+        )
 
     def _music_driver_id(self, driver_name: str) -> Any:
         if driver_name in TWINKLY_MUSIC_DRIVERS_OFFICIAL:
@@ -467,7 +481,9 @@ class Twinkly(object):
         return self._valid_response(await self._get("movies/current"))
 
     async def set_current_movie(self, movie_id: int) -> Any:
-        return self._valid_response(await self._post("movies/current", json={"id": movie_id}))
+        return self._valid_response(
+            await self._post("movies/current", json={"id": movie_id})
+        )
 
     async def get_current_colour(self) -> Any:
         return self._valid_response(await self._get("led/color"))
@@ -502,7 +518,9 @@ class Twinkly(object):
             json={"id": entry_id},
         )
 
-    def _valid_response(self, response: dict[Any, Any], check_for: str | None = None) -> dict[Any, Any]:
+    def _valid_response(
+        self, response: dict[Any, Any], check_for: str | None = None
+    ) -> dict[Any, Any]:
         """Validate twinkly-responses from the API."""
         if (
             response
