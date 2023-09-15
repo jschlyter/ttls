@@ -512,5 +512,6 @@ class Twinkly(object):
             return response
         raise TwinklyError(f"Invalid response from Twinkly: {response}")
 
+
 class TwinklyError(ValueError):
     """Error from the API."""

@@ -120,7 +120,7 @@ async def command_static(t: Twinkly, args: argparse.Namespace):
     if m is not None:
         rgb = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
     else:
-        c = TwinklyColor(args.colour)
+        c = TwinklyColour(args.colour)
         rgb = (int(c.red * 255), int(c.green * 255), int(c.blue * 255))
     return await t.set_static_colour(rgb)
 
