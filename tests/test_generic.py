@@ -52,14 +52,10 @@ class TwinklyMock(Twinkly):
             }
         if endpoint == "device_name":
             # Code should be 1000
-            return {
-                TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK + 1
-            }
+            return {TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK + 1}
         if endpoint == "movies":
             # Attribute "movies" is missing from the response
-            return {
-                TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK
-            }
+            return {TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK}
 
         _LOGGER.warning("Endpoint %s not yet implemented")
         return
@@ -76,7 +72,6 @@ class TestTwinklyGeneric(aiounittest.AsyncTestCase):
     async def test_get_details(self):
         res = await self.client.get_details()
         self.assertEqual(res["product_name"], "Twinkly")
-
 
     async def test_validation_error_code(self):
         with pytest.raises(TwinklyError) as e:
