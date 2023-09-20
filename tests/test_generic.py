@@ -6,7 +6,13 @@ from typing import Any
 import aiounittest
 import pytest
 
-from ttls.client import Twinkly, TwinklyFrame, TwinklyError
+from ttls.client import (
+    TWINKLY_RETURN_CODE,
+    TWINKLY_RETURN_CODE_OK,
+    Twinkly,
+    TwinklyError,
+    TwinklyFrame,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,17 +48,17 @@ class TwinklyMock(Twinkly):
                 "movie_capacity": 5397,
                 "max_movies": 55,
                 "copyright": "LEDWORKS 2021",
-                "code": 1000,
+                TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK,
             }
         if endpoint == "device_name":
             # Code should be 1000
             return {
-                "code": 500
+                TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK + 1
             }
         if endpoint == "movies":
             # Attribute "movies" is missing from the response
             return {
-                "code": 1000,
+                TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK
             }
 
         _LOGGER.warning("Endpoint %s not yet implemented")
