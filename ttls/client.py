@@ -25,6 +25,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+from __future__ import annotations
 
 import base64
 import logging
@@ -92,6 +93,9 @@ TWINKLY_MUSIC_DRIVERS = {
     **TWINKLY_MUSIC_DRIVERS_OFFICIAL,
     **TWINKLY_MUSIC_DRIVERS_UNOFFICIAL,
 }
+
+TWINKLY_RETURN_CODE = "code"
+TWINKLY_RETURN_CODE_OK = 1000
 
 DEFAULT_TIMEOUT = 3
 
@@ -258,22 +262,24 @@ class Twinkly(object):
         await self._post("verify", json={})
 
     async def get_name(self) -> Any:
-        return await self._get("device_name")
+        return self._valid_response(await self._get("device_name"))
 
     async def set_name(self, name: str) -> Any:
-        return await self._post("device_name", json={"name": name})
+        return self._valid_response(
+            await self._post("device_name", json={"name": name})
+        )
 
     async def reset(self) -> Any:
-        return await self._get("reset")
+        return self._valid_response(await self._get("reset"))
 
     async def get_network_status(self) -> Any:
-        return await self._get("network/status")
+        return self._valid_response(await self._get("network/status"))
 
     async def get_firmware_version(self) -> Any:
-        return await self._get("fw/version")
+        return self._valid_response(await self._get("fw/version"))
 
     async def get_details(self) -> Any:
-        return await self._get("gestalt")
+        return self._valid_response(await self._get("gestalt"))
 
     async def is_on(self) -> Optional[bool]:
         mode = await self.get_mode()
@@ -282,30 +288,30 @@ class Twinkly(object):
         return mode.get("mode", "off") != "off"
 
     async def turn_on(self) -> Any:
-        return await self.set_mode(self._default_mode)
+        return self._valid_response(await self.set_mode(self._default_mode))
 
     async def turn_off(self) -> Any:
-        return await self.set_mode("off")
+        return self._valid_response(await self.set_mode("off"))
 
     async def get_brightness(self) -> Any:
-        return await self._get("led/out/brightness")
+        return self._valid_response(await self._get("led/out/brightness"))
 
     async def set_brightness(self, percent: int) -> Any:
-        return await self._post(
-            "led/out/brightness", json={"value": percent, "type": "A"}
+        return self._valid_response(
+            await self._post("led/out/brightness", json={"value": percent, "type": "A"})
         )
 
     async def get_mode(self) -> Any:
-        return await self._get("led/mode")
+        return self._valid_response(await self._get("led/mode"))
 
     async def set_mode(self, mode: str) -> Any:
-        return await self._post("led/mode", json={"mode": mode})
+        return self._valid_response(await self._post("led/mode", json={"mode": mode}))
 
     async def get_mqtt(self) -> Any:
-        return await self._get("mqtt/config")
+        return self._valid_response(await self._get("mqtt/config"))
 
     async def set_mqtt(self, data: dict) -> Any:
-        return await self._post("mqtt/config", json=data)
+        return self._valid_response(await self._post("mqtt/config", json=data))
 
     async def send_frame(self, frame: TwinklyFrame) -> None:
         await self.interview()
@@ -340,16 +346,18 @@ class Twinkly(object):
             self._socket.sendto(header + bytes(payload), (self.host, self._rt_port))
 
     async def get_movie_config(self) -> Any:
-        return await self._get("led/movie/config")
+        return self._valid_response(await self._get("led/movie/config"))
 
     async def set_movie_config(self, data: dict) -> Any:
-        return await self._post("led/movie/config", json=data)
+        return self._valid_response(await self._post("led/movie/config", json=data))
 
     async def upload_movie(self, movie: bytes) -> Any:
-        return await self._post(
-            "led/movie/full",
-            data=movie,
-            headers={"Content-Type": "application/octet-stream"},
+        return self._valid_response(
+            await self._post(
+                "led/movie/full",
+                data=movie,
+                headers={"Content-Type": "application/octet-stream"},
+            )
         )
 
     async def set_static_colour(
@@ -405,13 +413,17 @@ class Twinkly(object):
         await self.set_mode("movie")
 
     async def summary(self) -> Any:
-        return await self._get("summary")
+        return self._valid_response(await self._get("summary"))
 
     async def music_on(self) -> Any:
-        return await self._post("music/enabled", json={"enabled": 1})
+        return self._valid_response(
+            await self._post("music/enabled", json={"enabled": 1})
+        )
 
     async def music_off(self) -> Any:
-        return await self._post("music/enabled", json={"enabled": 0})
+        return self._valid_response(
+            await self._post("music/enabled", json={"enabled": 0})
+        )
 
     async def get_music_drivers(self) -> Any:
         """
@@ -426,13 +438,17 @@ class Twinkly(object):
         raise NotImplementedError
 
     async def next_music_driver(self) -> Any:
-        return await self._post("music/drivers/current", json={"action": "next"})
+        return self._valid_response(
+            await self._post("music/drivers/current", json={"action": "next"})
+        )
 
     async def previous_music_driver(self) -> Any:
-        return await self._post("music/drivers/current", json={"action": "prev"})
+        return self._valid_response(
+            await self._post("music/drivers/current", json={"action": "prev"})
+        )
 
     async def get_current_music_driver(self) -> Any:
-        return await self._get("music/drivers/current")
+        return self._valid_response(await self._get("music/drivers/current"))
 
     async def set_current_music_driver(self, driver_name: str) -> Any:
         unique_id = self._music_driver_id(driver_name)
@@ -443,7 +459,9 @@ class Twinkly(object):
         current_driver = await self.get_current_music_driver()
         if current_driver["handle"] == -1:
             await self.next_music_driver()
-        return await self._post("music/drivers/current", json={"unique_id": unique_id})
+        return self._valid_response(
+            await self._post("music/drivers/current", json={"unique_id": unique_id})
+        )
 
     def _music_driver_id(self, driver_name: str) -> Any:
         if driver_name in TWINKLY_MUSIC_DRIVERS_OFFICIAL:
@@ -457,24 +475,26 @@ class Twinkly(object):
             return None
 
     async def get_saved_movies(self) -> Any:
-        return await self._get("movies")
+        return self._valid_response(await self._get("movies"), check_for="movies")
 
     async def get_current_movie(self) -> Any:
-        return await self._get("movies/current")
+        return self._valid_response(await self._get("movies/current"))
 
     async def set_current_movie(self, movie_id: int) -> Any:
-        return await self._post("movies/current", json={"id": movie_id})
+        return self._valid_response(
+            await self._post("movies/current", json={"id": movie_id})
+        )
 
     async def get_current_colour(self) -> Any:
-        return await self._get("led/color")
+        return self._valid_response(await self._get("led/color"))
 
     async def get_predefined_effects(self) -> Any:
         """Get the list of predefined effects."""
-        return await self._get("led/effects")
+        return self._valid_response(await self._get("led/effects"))
 
     async def get_current_predefined_effect(self) -> Any:
         """Get current effect."""
-        return await self._get("led/effects/current")
+        return self._valid_response(await self._get("led/effects/current"))
 
     async def set_current_predefined_effect(self, effect_id: int) -> None:
         """Set current effect."""
@@ -485,11 +505,11 @@ class Twinkly(object):
 
     async def get_playlist(self) -> Any:
         """Get the playlist."""
-        return await self._get("playlist")
+        return self._valid_response(await self._get("playlist"))
 
     async def get_current_playlist_entry(self) -> Any:
         """Get current playlist."""
-        return await self._get("playlist/current")
+        return self._valid_response(await self._get("playlist/current"))
 
     async def set_current_playlist_entry(self, entry_id: int) -> None:
         """Jump to specific effect in the playlist."""
@@ -497,3 +517,20 @@ class Twinkly(object):
             "playlist/current",
             json={"id": entry_id},
         )
+
+    def _valid_response(
+        self, response: dict[Any, Any], check_for: str | None = None
+    ) -> dict[Any, Any]:
+        """Validate twinkly-responses from the API."""
+        if (
+            response
+            and response.get(TWINKLY_RETURN_CODE) == TWINKLY_RETURN_CODE_OK
+            and (not check_for or check_for in response)
+        ):
+            _LOGGER.debug("Twinkly response: %s", response)
+            return response
+        raise TwinklyError(f"Invalid response from Twinkly: {response}")
+
+
+class TwinklyError(ValueError):
+    """Error from the API."""

@@ -4,8 +4,15 @@ import uuid
 from typing import Any
 
 import aiounittest
+import pytest
 
-from ttls.client import Twinkly, TwinklyFrame
+from ttls.client import (
+    TWINKLY_RETURN_CODE,
+    TWINKLY_RETURN_CODE_OK,
+    Twinkly,
+    TwinklyError,
+    TwinklyFrame,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +48,15 @@ class TwinklyMock(Twinkly):
                 "movie_capacity": 5397,
                 "max_movies": 55,
                 "copyright": "LEDWORKS 2021",
-                "code": 1000,
+                TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK,
             }
+        if endpoint == "device_name":
+            # Code should be 1000
+            return {TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK + 1}
+        if endpoint == "movies":
+            # Attribute "movies" is missing from the response
+            return {TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK}
+
         _LOGGER.warning("Endpoint %s not yet implemented")
         return
 
@@ -58,6 +72,16 @@ class TestTwinklyGeneric(aiounittest.AsyncTestCase):
     async def test_get_details(self):
         res = await self.client.get_details()
         self.assertEqual(res["product_name"], "Twinkly")
+
+    async def test_validation_error_code(self):
+        with pytest.raises(TwinklyError) as e:
+            await self.client.get_name()
+        assert "Invalid response from Twinkly" in str(e.value)
+
+    async def test_validation_error_string(self):
+        with pytest.raises(TwinklyError) as e:
+            await self.client.get_saved_movies()
+        assert "Invalid response from Twinkly" in str(e.value)
 
 
 if __name__ == "__main__":
