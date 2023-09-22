@@ -142,7 +142,7 @@ class Twinkly(object):
         return self._default_mode
 
     @default_mode.setter
-    def default_mode(self, mode: str | None) -> str:
+    def default_mode(self, mode: str) -> str:
         if mode not in TWINKLY_MODES:
             raise ValueError("Invalid mode")
         if mode == "off":
