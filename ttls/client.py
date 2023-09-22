@@ -156,6 +156,8 @@ class Twinkly(object):
     async def interview(self) -> None:
         if len(self._details) == 0:
             self._details = await self.get_details()
+            mode = await self.get_mode()
+            self._default_mode = mode["mode"]
 
     def _get_session(self):
         return self._session or ClientSession()
@@ -271,9 +273,7 @@ class Twinkly(object):
         return self._valid_response(await self._get("device_name"))
 
     async def set_name(self, name: str) -> Any:
-        return self._valid_response(
-            await self._post("device_name", json={"name": name})
-        )
+        return await self._post("device_name", json={"name": name})
 
     async def reset(self) -> Any:
         return self._valid_response(await self._get("reset"))
@@ -294,30 +294,28 @@ class Twinkly(object):
         return mode.get("mode", "off") != "off"
 
     async def turn_on(self) -> Any:
-        return self._valid_response(await self.set_mode(self._default_mode))
+        return await self.set_mode(self._default_mode)
 
     async def turn_off(self) -> Any:
-        return self._valid_response(await self.set_mode("off"))
+        return await self.set_mode("off")
 
     async def get_brightness(self) -> Any:
         return self._valid_response(await self._get("led/out/brightness"))
 
     async def set_brightness(self, percent: int) -> Any:
-        return self._valid_response(
-            await self._post("led/out/brightness", json={"value": percent, "type": "A"})
-        )
+        return await self._post("led/out/brightness", json={"value": percent, "type": "A"})
 
     async def get_mode(self) -> Any:
         return self._valid_response(await self._get("led/mode"))
 
     async def set_mode(self, mode: str) -> Any:
-        return self._valid_response(await self._post("led/mode", json={"mode": mode}))
+        return await self._post("led/mode", json={"mode": mode})
 
     async def get_mqtt(self) -> Any:
         return self._valid_response(await self._get("mqtt/config"))
 
     async def set_mqtt(self, data: dict) -> Any:
-        return self._valid_response(await self._post("mqtt/config", json=data))
+        return await self._post("mqtt/config", json=data)
 
     async def send_frame(self, frame: TwinklyFrame) -> None:
         await self.interview()
@@ -355,15 +353,13 @@ class Twinkly(object):
         return self._valid_response(await self._get("led/movie/config"))
 
     async def set_movie_config(self, data: dict) -> Any:
-        return self._valid_response(await self._post("led/movie/config", json=data))
+        return await self._post("led/movie/config", json=data)
 
     async def upload_movie(self, movie: bytes) -> Any:
-        return self._valid_response(
-            await self._post(
-                "led/movie/full",
-                data=movie,
-                headers={"Content-Type": "application/octet-stream"},
-            )
+        return await self._post(
+            "led/movie/full",
+            data=movie,
+            headers={"Content-Type": "application/octet-stream"},
         )
 
     async def set_static_colour(
@@ -381,7 +377,6 @@ class Twinkly(object):
             colour = colour[0]
         if isinstance(colour, Tuple):
             colour = TwinklyColour.from_twinkly_tuple(colour)
-
         await self._post(
             "led/color",
             json=colour.as_dict(),
@@ -425,14 +420,10 @@ class Twinkly(object):
         return self._valid_response(await self._get("summary"))
 
     async def music_on(self) -> Any:
-        return self._valid_response(
-            await self._post("music/enabled", json={"enabled": 1})
-        )
+        return await self._post("music/enabled", json={"enabled": 1})
 
     async def music_off(self) -> Any:
-        return self._valid_response(
-            await self._post("music/enabled", json={"enabled": 0})
-        )
+        return await self._post("music/enabled", json={"enabled": 0})
 
     async def get_music_drivers(self) -> Any:
         """
@@ -447,14 +438,10 @@ class Twinkly(object):
         raise NotImplementedError
 
     async def next_music_driver(self) -> Any:
-        return self._valid_response(
-            await self._post("music/drivers/current", json={"action": "next"})
-        )
+        return await self._post("music/drivers/current", json={"action": "next"})
 
     async def previous_music_driver(self) -> Any:
-        return self._valid_response(
-            await self._post("music/drivers/current", json={"action": "prev"})
-        )
+        return await self._post("music/drivers/current", json={"action": "prev"})
 
     async def get_current_music_driver(self) -> Any:
         return self._valid_response(await self._get("music/drivers/current"))
@@ -468,9 +455,7 @@ class Twinkly(object):
         current_driver = await self.get_current_music_driver()
         if current_driver["handle"] == -1:
             await self.next_music_driver()
-        return self._valid_response(
-            await self._post("music/drivers/current", json={"unique_id": unique_id})
-        )
+        return await self._post("music/drivers/current", json={"unique_id": unique_id})
 
     def _music_driver_id(self, driver_name: str) -> Any:
         if driver_name in TWINKLY_MUSIC_DRIVERS_OFFICIAL:
@@ -490,9 +475,7 @@ class Twinkly(object):
         return self._valid_response(await self._get("movies/current"))
 
     async def set_current_movie(self, movie_id: int) -> Any:
-        return self._valid_response(
-            await self._post("movies/current", json={"id": movie_id})
-        )
+        return await self._post("movies/current", json={"id": movie_id})
 
     async def get_current_colour(self) -> Any:
         return self._valid_response(await self._get("led/color"))
