@@ -381,8 +381,7 @@ class Twinkly(object):
             colour = colour[0]
         if isinstance(colour, Tuple):
             colour = TwinklyColour.from_twinkly_tuple(colour)
-        if not self.is_rgbw():
-            colour.white = None
+
         await self._post(
             "led/color",
             json=colour.as_dict(),
