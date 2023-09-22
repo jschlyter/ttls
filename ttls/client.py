@@ -142,7 +142,9 @@ class Twinkly(object):
         return self._default_mode
 
     @default_mode.setter
-    def default_mode(self, mode: str) -> str:
+    def default_mode(self, mode: str | None = None) -> str:
+        if not mode:
+            return
         if mode not in TWINKLY_MODES:
             raise ValueError("Invalid mode")
         if mode == "off":
@@ -156,6 +158,9 @@ class Twinkly(object):
     async def interview(self) -> None:
         if len(self._details) == 0:
             self._details = await self.get_details()
+            mode = await self.get_mode()
+            if mode.get("mode") != "off":
+                self.default_mode = mode.get("mode")
 
     def _get_session(self):
         return self._session or ClientSession()
