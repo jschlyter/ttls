@@ -303,7 +303,9 @@ class Twinkly(object):
         return self._valid_response(await self._get("led/out/brightness"))
 
     async def set_brightness(self, percent: int) -> Any:
-        return await self._post("led/out/brightness", json={"value": percent, "type": "A"})
+        return await self._post(
+            "led/out/brightness", json={"value": percent, "type": "A"}
+        )
 
     async def get_mode(self) -> Any:
         return self._valid_response(await self._get("led/mode"))
