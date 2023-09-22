@@ -131,6 +131,12 @@ class Twinkly(object):
     def length(self) -> int:
         return int(self._details["number_of_led"])
 
+    def is_rgbw(self) -> bool:
+        return self._details["led_profile"] == "RGBW"
+
+    def is_rgb(self) -> bool:
+        return self._details["led_profile"] == "RGB"
+
     @property
     def default_mode(self) -> str:
         return self._default_mode
@@ -369,13 +375,17 @@ class Twinkly(object):
             List[TwinklyColourTuple],
         ],
     ) -> None:
+        if not self._details:
+            await self.interview()
         if isinstance(colour, List):
             colour = colour[0]
         if isinstance(colour, Tuple):
             colour = TwinklyColour.from_twinkly_tuple(colour)
+        if not self.is_rgbw():
+            colour.white = None
         await self._post(
             "led/color",
-            json={"red": colour.red, "green": colour.green, "blue": colour.blue},
+            json=colour.as_dict(),
         )
         await self.set_mode("color")
 
