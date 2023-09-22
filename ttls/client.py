@@ -157,7 +157,8 @@ class Twinkly(object):
         if len(self._details) == 0:
             self._details = await self.get_details()
             mode = await self.get_mode()
-            self._default_mode = mode["mode"]
+            if mode["mode"] != "off":
+                self.default_mode = mode["mode"]
 
     def _get_session(self):
         return self._session or ClientSession()
