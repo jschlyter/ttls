@@ -155,8 +155,8 @@ class Twinkly(object):
         if not self._shared_session:
             await self._get_session().close()
 
-    async def interview(self) -> None:
-        if len(self._details) == 0:
+    async def interview(self, force: bool | None = False) -> None:
+        if len(self._details) == 0 or force:
             self._details = await self.get_details()
             mode = await self.get_mode()
             if mode.get("mode") != "off":
