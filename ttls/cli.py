@@ -35,7 +35,7 @@ import logging
 import re
 import sys
 
-from colours import TwinklyColour
+from .colours import TwinklyColour
 
 from .client import (
     TWINKLY_MODES,
