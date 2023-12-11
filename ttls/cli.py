@@ -35,8 +35,6 @@ import logging
 import re
 import sys
 
-from .colours import TwinklyColour
-
 from .client import (
     TWINKLY_MODES,
     TWINKLY_MUSIC_DRIVERS,
@@ -44,6 +42,7 @@ from .client import (
     TWINKLY_MUSIC_DRIVERS_UNOFFICIAL,
     Twinkly,
 )
+from .colours import TwinklyColour
 
 logger = logging.getLogger(__name__)
 
