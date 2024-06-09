@@ -13,7 +13,7 @@ BLUE = (0x00, 0x00, 0xFF)
 def generate_xmas_frame(n: int) -> TwinklyFrame:
     """Generate a very merry frame"""
     res = []
-    for i in range(0, n):
+    for _ in range(n):
         if random.random() > 0.5:
             res.append(RED)
         else:
@@ -53,7 +53,7 @@ def main() -> None:
 
     movie = []
 
-    for n in range(0, args.count):
+    for _ in range(args.count):
         frame = [v for sublist in generate_xmas_frame(args.leds) for v in sublist]
         movie.extend(frame)
 
