@@ -101,7 +101,7 @@ TWINKLY_RETURN_CODE_OK = 1000
 DEFAULT_TIMEOUT = 3
 
 
-class Twinkly(object):
+class Twinkly:
     def __init__(
         self,
         host: str,
