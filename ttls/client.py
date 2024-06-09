@@ -232,8 +232,8 @@ class Twinkly:
 
         retry_num += 1
         _LOGGER.debug(
-            "Invalid token for request. " +
-            f"Refreshing token and attempting retry {retry_num} of {max_retries}."
+            "Invalid token for request. "
+            + f"Refreshing token and attempting retry {retry_num} of {max_retries}."
         )
         await self.refresh_token()
         return await request_method(
@@ -371,7 +371,10 @@ class Twinkly:
 
     async def set_static_colour(
         self,
-        colour: TwinklyColour | TwinklyColourTuple | list[TwinklyColour] | list[TwinklyColourTuple],
+        colour: TwinklyColour
+        | TwinklyColourTuple
+        | list[TwinklyColour]
+        | list[TwinklyColourTuple],
     ) -> None:
         if not self._details:
             await self.interview()
@@ -387,7 +390,10 @@ class Twinkly:
 
     async def set_cycle_colours(
         self,
-        colour: TwinklyColour | TwinklyColourTuple | list[TwinklyColour] | list[TwinklyColourTuple],
+        colour: TwinklyColour
+        | TwinklyColourTuple
+        | list[TwinklyColour]
+        | list[TwinklyColourTuple],
     ) -> None:
         if isinstance(colour, TwinklyColour):
             sequence = [colour.as_twinkly_tuple()]
