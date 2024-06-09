@@ -121,7 +121,7 @@ class Twinkly(object):
         self._rt_port = 7777
         self._expires = None
         self._token = None
-        self._details: Dict[str, Union[str, int]] = {}
+        self._details: dict[str, Union[str, int]] = {}
         self._default_mode = "movie"
 
     @property
