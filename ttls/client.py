@@ -34,7 +34,7 @@ import os
 import socket
 import time
 from itertools import cycle, islice
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple
 
 from aiohttp import ClientResponseError, ClientSession, ClientTimeout
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -105,8 +105,8 @@ class Twinkly:
     def __init__(
         self,
         host: str,
-        session: Optional[ClientSession] = None,
-        timeout: Optional[int] = None,
+        session: ClientSession | None = None,
+        timeout: int | None = None,
     ):
         self.host = host
         self._timeout = ClientTimeout(total=timeout or DEFAULT_TIMEOUT)
@@ -121,7 +121,7 @@ class Twinkly:
         self._rt_port = 7777
         self._expires = None
         self._token = None
-        self._details: dict[str, Union[str, int]] = {}
+        self._details: dict[str, str | int] = {}
         self._default_mode = "movie"
 
     @property
@@ -232,7 +232,8 @@ class Twinkly:
 
         retry_num += 1
         _LOGGER.debug(
-            f"Invalid token for request. Refreshing token and attempting retry {retry_num} of {max_retries}."
+            "Invalid token for request. " +
+            f"Refreshing token and attempting retry {retry_num} of {max_retries}."
         )
         await self.refresh_token()
         return await request_method(
@@ -291,7 +292,7 @@ class Twinkly:
     async def get_details(self) -> Any:
         return self._valid_response(await self._get("gestalt"))
 
-    async def is_on(self) -> Optional[bool]:
+    async def is_on(self) -> bool | None:
         mode = await self.get_mode()
         if mode is None:
             return None
@@ -370,12 +371,7 @@ class Twinkly:
 
     async def set_static_colour(
         self,
-        colour: Union[
-            TwinklyColour,
-            TwinklyColourTuple,
-            list[TwinklyColour],
-            list[TwinklyColourTuple],
-        ],
+        colour: TwinklyColour | TwinklyColourTuple | list[TwinklyColour] | list[TwinklyColourTuple],
     ) -> None:
         if not self._details:
             await self.interview()
@@ -391,12 +387,7 @@ class Twinkly:
 
     async def set_cycle_colours(
         self,
-        colour: Union[
-            TwinklyColour,
-            TwinklyColourTuple,
-            list[TwinklyColour],
-            list[TwinklyColourTuple],
-        ],
+        colour: TwinklyColour | TwinklyColourTuple | list[TwinklyColour] | list[TwinklyColourTuple],
     ) -> None:
         if isinstance(colour, TwinklyColour):
             sequence = [colour.as_twinkly_tuple()]
