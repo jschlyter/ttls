@@ -34,7 +34,7 @@ import os
 import socket
 import time
 from itertools import cycle, islice
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 from aiohttp import ClientResponseError, ClientSession, ClientTimeout
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -43,7 +43,7 @@ from .colours import TwinklyColour, TwinklyColourTuple
 
 _LOGGER = logging.getLogger(__name__)
 
-TwinklyFrame = List[TwinklyColourTuple]
+TwinklyFrame = list[TwinklyColourTuple]
 TwinklyResult = Optional[dict]
 
 
@@ -373,13 +373,13 @@ class Twinkly(object):
         colour: Union[
             TwinklyColour,
             TwinklyColourTuple,
-            List[TwinklyColour],
-            List[TwinklyColourTuple],
+            list[TwinklyColour],
+            list[TwinklyColourTuple],
         ],
     ) -> None:
         if not self._details:
             await self.interview()
-        if isinstance(colour, List):
+        if isinstance(colour, list):
             colour = colour[0]
         if isinstance(colour, Tuple):
             colour = TwinklyColour.from_twinkly_tuple(colour)
@@ -394,15 +394,15 @@ class Twinkly(object):
         colour: Union[
             TwinklyColour,
             TwinklyColourTuple,
-            List[TwinklyColour],
-            List[TwinklyColourTuple],
+            list[TwinklyColour],
+            list[TwinklyColourTuple],
         ],
     ) -> None:
         if isinstance(colour, TwinklyColour):
             sequence = [colour.as_twinkly_tuple()]
         elif isinstance(colour, Tuple):
             sequence = [colour]
-        elif isinstance(colour, List):
+        elif isinstance(colour, list):
             if isinstance(colour[0], TwinklyColour):
                 sequence = [c.as_twinkly_tuple() for c in colour]
             else:
