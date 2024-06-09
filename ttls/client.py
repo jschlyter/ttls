@@ -34,7 +34,7 @@ import os
 import socket
 import time
 from itertools import cycle, islice
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union
 
 from aiohttp import ClientResponseError, ClientSession, ClientTimeout
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -117,11 +117,11 @@ class Twinkly(object):
             self._session = None
             self._shared_session = False
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._headers: Dict[str, str] = {}
+        self._headers: dict[str, str] = {}
         self._rt_port = 7777
         self._expires = None
         self._token = None
-        self._details: Dict[str, Union[str, int]] = {}
+        self._details: dict[str, Union[str, int]] = {}
         self._default_mode = "movie"
 
     @property
