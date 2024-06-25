@@ -6,6 +6,7 @@ version = "1.8.2"
 description = "Twinkly Twinkly Little Star"
 authors = ["Jakob Schlyter <jakob@schlyter.se>"]
 license = "BSD-2-Clause"
+classifiers = ["License :: OSI Approved :: BSD License"]
 readme = "README.md"
 repository = "https://github.com/jschlyter/ttls"
 
