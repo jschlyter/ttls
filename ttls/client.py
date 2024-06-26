@@ -25,6 +25,7 @@ IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+
 from __future__ import annotations
 
 import base64
@@ -33,7 +34,7 @@ import os
 import socket
 import time
 from itertools import cycle, islice
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple
 
 from aiohttp import ClientResponseError, ClientSession, ClientTimeout
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -42,7 +43,7 @@ from .colours import TwinklyColour, TwinklyColourTuple
 
 _LOGGER = logging.getLogger(__name__)
 
-TwinklyFrame = List[TwinklyColourTuple]
+TwinklyFrame = list[TwinklyColourTuple]
 TwinklyResult = Optional[dict]
 
 
@@ -100,12 +101,12 @@ TWINKLY_RETURN_CODE_OK = 1000
 DEFAULT_TIMEOUT = 3
 
 
-class Twinkly(object):
+class Twinkly:
     def __init__(
         self,
         host: str,
-        session: Optional[ClientSession] = None,
-        timeout: Optional[int] = None,
+        session: ClientSession | None = None,
+        timeout: int | None = None,
     ):
         self.host = host
         self._timeout = ClientTimeout(total=timeout or DEFAULT_TIMEOUT)
@@ -116,11 +117,11 @@ class Twinkly(object):
             self._session = None
             self._shared_session = False
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._headers: Dict[str, str] = {}
+        self._headers: dict[str, str] = {}
         self._rt_port = 7777
         self._expires = None
         self._token = None
-        self._details: Dict[str, Union[str, int]] = {}
+        self._details: dict[str, str | int] = {}
         self._default_mode = "movie"
 
     @property
@@ -231,7 +232,8 @@ class Twinkly(object):
 
         retry_num += 1
         _LOGGER.debug(
-            f"Invalid token for request. Refreshing token and attempting retry {retry_num} of {max_retries}."
+            "Invalid token for request. "
+            + f"Refreshing token and attempting retry {retry_num} of {max_retries}."
         )
         await self.refresh_token()
         return await request_method(
@@ -290,7 +292,7 @@ class Twinkly(object):
     async def get_details(self) -> Any:
         return self._valid_response(await self._get("gestalt"))
 
-    async def is_on(self) -> Optional[bool]:
+    async def is_on(self) -> bool | None:
         mode = await self.get_mode()
         if mode is None:
             return None
@@ -369,16 +371,14 @@ class Twinkly(object):
 
     async def set_static_colour(
         self,
-        colour: Union[
-            TwinklyColour,
-            TwinklyColourTuple,
-            List[TwinklyColour],
-            List[TwinklyColourTuple],
-        ],
+        colour: TwinklyColour
+        | TwinklyColourTuple
+        | list[TwinklyColour]
+        | list[TwinklyColourTuple],
     ) -> None:
         if not self._details:
             await self.interview()
-        if isinstance(colour, List):
+        if isinstance(colour, list):
             colour = colour[0]
         if isinstance(colour, Tuple):
             colour = TwinklyColour.from_twinkly_tuple(colour)
@@ -390,18 +390,16 @@ class Twinkly(object):
 
     async def set_cycle_colours(
         self,
-        colour: Union[
-            TwinklyColour,
-            TwinklyColourTuple,
-            List[TwinklyColour],
-            List[TwinklyColourTuple],
-        ],
+        colour: TwinklyColour
+        | TwinklyColourTuple
+        | list[TwinklyColour]
+        | list[TwinklyColourTuple],
     ) -> None:
         if isinstance(colour, TwinklyColour):
             sequence = [colour.as_twinkly_tuple()]
         elif isinstance(colour, Tuple):
             sequence = [colour]
-        elif isinstance(colour, List):
+        elif isinstance(colour, list):
             if isinstance(colour[0], TwinklyColour):
                 sequence = [c.as_twinkly_tuple() for c in colour]
             else:

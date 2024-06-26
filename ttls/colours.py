@@ -28,8 +28,7 @@ class TwinklyColour:
             return (self.red, self.green, self.blue)
 
     def __iter__(self):
-        for i in self.as_tuple():
-            yield i
+        yield from self.as_tuple()
 
     def as_dict(self) -> ColourDict:
         """Convert TwinklyColour to a dict wth color names used by set-led functions."""
