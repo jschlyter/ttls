@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Twinkly Twinkly Little Star
 https://github.com/jschlyter/ttls
