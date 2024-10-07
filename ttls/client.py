@@ -319,7 +319,8 @@ class Twinkly:
         return self._valid_response(await self._get("network/status"))
 
     async def get_firmware_version(self) -> Any:
-        return self._valid_response(await self._get("fw/version"))
+        endpoint = "fw/version" if await self.get_api_version() == 1 else "fw/ct1/version"
+        return self._valid_response(await self._get(endpoint))
 
     async def get_details(self) -> Any:
         return self._valid_response(await self._get("gestalt"))
