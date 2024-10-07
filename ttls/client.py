@@ -107,6 +107,7 @@ class Twinkly:
         host: str,
         session: ClientSession | None = None,
         timeout: int | None = None,
+        api_version: int | None = None,
     ):
         self.host = host
         self._timeout = ClientTimeout(total=timeout or DEFAULT_TIMEOUT)
@@ -123,10 +124,11 @@ class Twinkly:
         self._token = None
         self._details: dict[str, str | int] = {}
         self._default_mode = "movie"
+        self._api_version = api_version
 
     @property
     def base(self) -> str:
-        return f"http://{self.host}/xled/v1"
+        return f"http://{self.host}/xled/v{self._api_version}"
 
     @property
     def length(self) -> int:
@@ -166,7 +168,35 @@ class Twinkly:
     def _get_session(self):
         return self._session or ClientSession()
 
+    async def _info(self) -> Any:
+        _LOGGER.debug("INFO")
+        try:
+            async with self._get_session().get(
+                f"http://{self.host}/xled/info",
+                timeout=self._timeout,
+                raise_for_status=True,
+            ) as r:
+                _LOGGER.debug("INFO response %d", r.status)
+                return await r.json()
+        except ClientResponseError as e:
+                raise e
+
+    async def get_api_version(self) -> int:
+        if self._api_version is not None:
+            return self._api_version
+        return await self.detect_api_version()
+
+    async def detect_api_version(self) -> int:
+        try:
+            info = await self._info()
+            return int(info['api']['min_version'].split('.')[0])
+        except ClientResponseError as e:
+            _LOGGER.debug(e)
+            return 1
+
     async def _post(self, endpoint: str, **kwargs) -> Any:
+        if self._api_version is None:
+            self._api_version = await self.get_api_version()
         await self.ensure_token()
         _LOGGER.debug("POST endpoint %s", endpoint)
         if "json" in kwargs:
@@ -192,6 +222,8 @@ class Twinkly:
                 raise e
 
     async def _get(self, endpoint: str, **kwargs) -> Any:
+        if self._api_version is None:
+            self._api_version = await self.get_api_version()
         await self.ensure_token()
         _LOGGER.debug("GET endpoint %s", endpoint)
         headers = kwargs.pop("headers", self._headers)
@@ -308,15 +340,20 @@ class Twinkly:
         return self._valid_response(await self._get("led/out/brightness"))
 
     async def set_brightness(self, percent: int) -> Any:
+        args={"value": percent, "type": "A"}
+        if await self.get_api_version() >= 2:
+            args["mode"] = "enabled"
         return await self._post(
-            "led/out/brightness", json={"value": percent, "type": "A"}
+            "led/out/brightness", json=args
         )
 
     async def get_mode(self) -> Any:
-        return self._valid_response(await self._get("led/mode"))
+        endpoint = "led/mode" if await self.get_api_version() == 1 else "application/mode"
+        return self._valid_response(await self._get(endpoint))
 
     async def set_mode(self, mode: str) -> Any:
-        return await self._post("led/mode", json={"mode": mode})
+        endpoint = "led/mode" if await self.get_api_version() == 1 else "application/mode"
+        return await self._post(endpoint, json={"mode": mode})
 
     async def get_mqtt(self) -> Any:
         return self._valid_response(await self._get("mqtt/config"))
@@ -519,7 +556,14 @@ class Twinkly:
         """Validate twinkly-responses from the API."""
         if (
             response
-            and response.get(TWINKLY_RETURN_CODE) == TWINKLY_RETURN_CODE_OK
+            and  self._api_version >= 2
+        ):
+            result = response.get('result')
+        else:
+            result = response
+        if (
+            result
+            and result.get(TWINKLY_RETURN_CODE) == TWINKLY_RETURN_CODE_OK
             and (not check_for or check_for in response)
         ):
             _LOGGER.debug("Twinkly response: %s", response)
