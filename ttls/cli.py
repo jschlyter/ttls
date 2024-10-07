@@ -113,13 +113,14 @@ async def command_movie(t: Twinkly, args: argparse.Namespace):
 
 async def command_static(t: Twinkly, args: argparse.Namespace):
     await t.interview()
-    m = re.match(r"(\d+),(\d+),(\d+)", args.colour)
+    m = re.match(r"(\d+),(\d+),(\d+),?(\d+)?", args.colour)
     if m is not None:
-        rgb = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
+        w = int(m.group(4)) if m.group(4) is not None else None
+        rgbw = (int(m.group(1)), int(m.group(2)), int(m.group(3)), w)
     else:
         c = TwinklyColour(args.colour)
-        rgb = (int(c.red * 255), int(c.green * 255), int(c.blue * 255))
-    return await t.set_static_colour(rgb)
+        rgbw = (int(c.red * 255), int(c.green * 255), int(c.blue * 255), None)
+    return await t.set_static_colour(rgbw)
 
 
 async def command_summary(t: Twinkly, args: argparse.Namespace):
