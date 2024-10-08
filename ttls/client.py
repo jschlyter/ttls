@@ -401,6 +401,8 @@ class Twinkly:
             self._socket.sendto(header + bytes(payload), (self.host, self._rt_port))
 
     async def get_movie_config(self) -> Any:
+        if await self.get_api_version() != 1:
+            raise NotImplementedError 
         return self._valid_response(await self._get("led/movie/config"))
 
     async def set_movie_config(self, data: dict) -> Any:
@@ -491,6 +493,8 @@ class Twinkly:
         return await self._post("music/drivers/current", json={"action": "prev"})
 
     async def get_current_music_driver(self) -> Any:
+        if await self.get_api_version() != 1:
+            raise NotImplementedError 
         return self._valid_response(await self._get("music/drivers/current"))
 
     async def set_current_music_driver(self, driver_name: str) -> Any:
@@ -529,10 +533,14 @@ class Twinkly:
 
     async def get_predefined_effects(self) -> Any:
         """Get the list of predefined effects."""
+        if await self.get_api_version() != 1:
+            raise NotImplementedError 
         return self._valid_response(await self._get("led/effects"))
 
     async def get_current_predefined_effect(self) -> Any:
         """Get current effect."""
+        if await self.get_api_version() != 1:
+            raise NotImplementedError 
         return self._valid_response(await self._get("led/effects/current"))
 
     async def set_current_predefined_effect(self, effect_id: int) -> None:
@@ -544,10 +552,14 @@ class Twinkly:
 
     async def get_playlist(self) -> Any:
         """Get the playlist."""
+        if await self.get_api_version() != 1:
+            raise NotImplementedError 
         return self._valid_response(await self._get("playlist"))
 
     async def get_current_playlist_entry(self) -> Any:
         """Get current playlist."""
+        if await self.get_api_version() != 1:
+            raise NotImplementedError 
         return self._valid_response(await self._get("playlist/current"))
 
     async def set_current_playlist_entry(self, entry_id: int) -> None:
