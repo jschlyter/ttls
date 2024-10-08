@@ -307,10 +307,12 @@ class Twinkly:
         await self._post("verify", json={})
 
     async def get_name(self) -> Any:
-        return self._valid_response(await self._get("device_name"))
+        endpoint = "device_name" if await self.get_api_version() == 1 else "device/name"
+        return self._valid_response(await self._get(endpoint))
 
     async def set_name(self, name: str) -> Any:
-        return await self._post("device_name", json={"name": name})
+        endpoint = "device_name" if await self.get_api_version() == 1 else "device/name"
+        return await self._post(endpoint, json={"name": name})
 
     async def reset(self) -> Any:
         return self._valid_response(await self._get("reset"))
