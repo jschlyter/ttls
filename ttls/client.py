@@ -552,9 +552,8 @@ class Twinkly:
 
     async def get_playlist(self) -> Any:
         """Get the playlist."""
-        if await self.get_api_version() != 1:
-            raise NotImplementedError 
-        return self._valid_response(await self._get("playlist"))
+        endpoint = "playlist" if await self.get_api_version() == 1 else "playlists"
+        return self._valid_response(await self._get(endpoint))
 
     async def get_current_playlist_entry(self) -> Any:
         """Get current playlist."""
