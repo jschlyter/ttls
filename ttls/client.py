@@ -187,9 +187,9 @@ class Twinkly:
                 raise e
 
     async def get_api_version(self) -> int:
-        if self._api_version is not None:
-            return self._api_version
-        return await self.detect_api_version()
+        if self._api_version is None:
+            self._api_version = await self.detect_api_version()
+        return self._api_version
 
     async def detect_api_version(self) -> int:
         try:
@@ -200,8 +200,7 @@ class Twinkly:
             return 1
 
     async def _post(self, endpoint: str, **kwargs) -> Any:
-        if self._api_version is None:
-            self._api_version = await self.get_api_version()
+        await self.get_api_version()
         await self.ensure_token()
         _LOGGER.debug("POST endpoint %s", endpoint)
         if "json" in kwargs:
@@ -227,8 +226,7 @@ class Twinkly:
                 raise e
 
     async def _get(self, endpoint: str, **kwargs) -> Any:
-        if self._api_version is None:
-            self._api_version = await self.get_api_version()
+        await self.get_api_version()
         await self.ensure_token()
         _LOGGER.debug("GET endpoint %s", endpoint)
         headers = kwargs.pop("headers", self._headers)
