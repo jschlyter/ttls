@@ -430,11 +430,18 @@ class Twinkly:
             colour = colour[0]
         if isinstance(colour, Tuple):
             colour = TwinklyColour.from_twinkly_tuple(colour)
-        await self._post(
-            "led/color",
-            json=colour.as_dict(),
-        )
-        await self.set_mode("color")
+        if await self.get_api_version() == 1:
+            await self._post(
+                "led/color",
+                json=colour.as_dict(),
+            )
+            await self.set_mode("color")
+        else:
+            await self.set_mode("color")
+            await self._post(
+                "led/color",
+                json=colour.as_dict(),
+            )
 
     async def set_cycle_colours(
         self,
