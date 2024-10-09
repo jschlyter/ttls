@@ -128,6 +128,8 @@ class Twinkly:
 
     @property
     def base(self) -> str:
+        if self._api_version is None:
+            raise ValueError("api version isn't set")
         return f"http://{self.host}/xled/v{self._api_version}"
 
     @property
