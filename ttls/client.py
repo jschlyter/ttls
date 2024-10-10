@@ -178,7 +178,7 @@ class Twinkly:
             self._session = ClientSession() 
         return self._session
 
-       async def _info(self) -> Any:
+    async def _info(self) -> Any:
         _LOGGER.debug("INFO")
         try:
             async with self._get_session().get(
