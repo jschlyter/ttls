@@ -36,7 +36,7 @@ import time
 from itertools import cycle, islice
 from typing import Any, Callable, Optional, Tuple
 
-from aiohttp import ClientResponseError, ClientSession, ClientTimeout
+from aiohttp import ClientResponseError, ClientSession, ClientTimeout, ServerDisconnectedError
 from aiohttp.web_exceptions import HTTPUnauthorized
 
 from .colours import TwinklyColour, TwinklyColourTuple
@@ -173,7 +173,7 @@ class Twinkly:
             self._session = ClientSession() 
         return self._session
 
-    async def _info(self) -> Any:
+       async def _info(self) -> Any:
         _LOGGER.debug("INFO")
         try:
             async with self._get_session().get(
@@ -183,7 +183,7 @@ class Twinkly:
             ) as r:
                 _LOGGER.debug("INFO response %d", r.status)
                 return await r.json()
-        except ClientResponseError as e:
+        except (ClientResponseError, ServerDisconnectedError) as e:
                 raise e
 
     async def get_api_version(self) -> int:
@@ -195,7 +195,7 @@ class Twinkly:
         try:
             info = await self._info()
             return int(info['api']['min_version'].split('.')[0])
-        except ClientResponseError as e:
+        except (ClientResponseError, ServerDisconnectedError) as e:
             _LOGGER.debug(e)
             return 1
 
