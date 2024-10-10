@@ -36,7 +36,12 @@ import time
 from itertools import cycle, islice
 from typing import Any, Callable, Optional, Tuple
 
-from aiohttp import ClientResponseError, ClientSession, ClientTimeout, ServerDisconnectedError
+from aiohttp import (
+    ClientResponseError,
+    ClientSession,
+    ClientTimeout,
+    ServerDisconnectedError,
+)
 from aiohttp.web_exceptions import HTTPUnauthorized
 
 from .colours import TwinklyColour, TwinklyColourTuple
