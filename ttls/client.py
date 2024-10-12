@@ -175,7 +175,7 @@ class Twinkly:
 
     def _get_session(self):
         if not self._session:
-            self._session = ClientSession() 
+            self._session = ClientSession()
         return self._session
 
     async def _info(self) -> Any:
@@ -189,7 +189,7 @@ class Twinkly:
                 _LOGGER.debug("INFO response %d", r.status)
                 return await r.json()
         except (ClientResponseError, ServerDisconnectedError) as e:
-                raise e
+            raise e
 
     async def get_api_version(self) -> int:
         if self._api_version is None:
@@ -199,7 +199,7 @@ class Twinkly:
     async def detect_api_version(self) -> int:
         try:
             info = await self._info()
-            return int(info['api']['min_version'].split('.')[0])
+            return int(info["api"]["min_version"].split(".")[0])
         except (ClientResponseError, ServerDisconnectedError) as e:
             _LOGGER.debug(e)
             return 1
@@ -326,11 +326,17 @@ class Twinkly:
         return self._valid_response(await self._get("reset"))
 
     async def get_network_status(self) -> Any:
-        endpoint = "network/status" if await self.get_api_version() == 1 else "network/eth/status"
+        endpoint = (
+            "network/status"
+            if await self.get_api_version() == 1
+            else "network/eth/status"
+        )
         return self._valid_response(await self._get(endpoint))
 
     async def get_firmware_version(self) -> Any:
-        endpoint = "fw/version" if await self.get_api_version() == 1 else "fw/ct1/version"
+        endpoint = (
+            "fw/version" if await self.get_api_version() == 1 else "fw/ct1/version"
+        )
         return self._valid_response(await self._get(endpoint))
 
     async def get_details(self) -> Any:
@@ -352,19 +358,21 @@ class Twinkly:
         return self._valid_response(await self._get("led/out/brightness"))
 
     async def set_brightness(self, percent: int) -> Any:
-        args={"value": percent, "type": "A"}
+        args = {"value": percent, "type": "A"}
         if await self.get_api_version() >= 2:
             args["mode"] = "enabled"
-        return await self._post(
-            "led/out/brightness", json=args
-        )
+        return await self._post("led/out/brightness", json=args)
 
     async def get_mode(self) -> Any:
-        endpoint = "led/mode" if await self.get_api_version() == 1 else "application/mode"
+        endpoint = (
+            "led/mode" if await self.get_api_version() == 1 else "application/mode"
+        )
         return self._valid_response(await self._get(endpoint))
 
     async def set_mode(self, mode: str) -> Any:
-        endpoint = "led/mode" if await self.get_api_version() == 1 else "application/mode"
+        endpoint = (
+            "led/mode" if await self.get_api_version() == 1 else "application/mode"
+        )
         return await self._post(endpoint, json={"mode": mode})
 
     async def get_mqtt(self) -> Any:
@@ -407,7 +415,7 @@ class Twinkly:
 
     async def get_movie_config(self) -> Any:
         if await self.get_api_version() != 1:
-            raise NotImplementedError 
+            raise NotImplementedError
         return self._valid_response(await self._get("led/movie/config"))
 
     async def set_movie_config(self, data: dict) -> Any:
@@ -507,7 +515,7 @@ class Twinkly:
 
     async def get_current_music_driver(self) -> Any:
         if await self.get_api_version() != 1:
-            raise NotImplementedError 
+            raise NotImplementedError
         return self._valid_response(await self._get("music/drivers/current"))
 
     async def set_current_music_driver(self, driver_name: str) -> Any:
@@ -547,13 +555,13 @@ class Twinkly:
     async def get_predefined_effects(self) -> Any:
         """Get the list of predefined effects."""
         if await self.get_api_version() != 1:
-            raise NotImplementedError 
+            raise NotImplementedError
         return self._valid_response(await self._get("led/effects"))
 
     async def get_current_predefined_effect(self) -> Any:
         """Get current effect."""
         if await self.get_api_version() != 1:
-            raise NotImplementedError 
+            raise NotImplementedError
         return self._valid_response(await self._get("led/effects/current"))
 
     async def set_current_predefined_effect(self, effect_id: int) -> None:
@@ -571,7 +579,7 @@ class Twinkly:
     async def get_current_playlist_entry(self) -> Any:
         """Get current playlist."""
         if await self.get_api_version() != 1:
-            raise NotImplementedError 
+            raise NotImplementedError
         return self._valid_response(await self._get("playlist/current"))
 
     async def set_current_playlist_entry(self, entry_id: int) -> None:
@@ -585,11 +593,8 @@ class Twinkly:
         self, response: dict[Any, Any], check_for: str | None = None
     ) -> dict[Any, Any]:
         """Validate twinkly-responses from the API."""
-        if (
-            response
-            and  self._api_version >= 2
-        ):
-            result = response.get('result')
+        if response and self._api_version >= 2:
+            result = response.get("result")
         else:
             result = response
         if (
