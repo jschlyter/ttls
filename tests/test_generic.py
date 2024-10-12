@@ -29,6 +29,7 @@ class TwinklyMock(Twinkly):
         if self._api_version == 1:
             return await self._get_v1(endpoint, **kwargs)
         return await self._get_v2(endpoint, **kwargs)
+
     async def _get_v1(self, endpoint: str, **kwargs) -> Any:
         if endpoint == "gestalt":
             return {
@@ -67,90 +68,51 @@ class TwinklyMock(Twinkly):
     async def _get_v2(self, endpoint: str, **kwargs) -> Any:
         if endpoint == "gestalt":
             return {
-                "artnet_en" : False,
-                "cloud" : True,
-                "device_config" : {
-                   "drv_params" : {
-                      "t0h" : 7000,
-                      "t0l" : 2000,
-                      "t1h" : 3500,
-                      "t1l" : 5500,
-                      "tendh" : 4000,
-                      "tendl" : 12500
-                   },
-                   "led_drv" : "d9865c",
-                   "led_id" : 136,
-                   "led_profile" : "RGBW",
-                   "ports" : [
-                      {
-                         "port_id" : 0,
-                         "strings" : [
-                            {
-                               "len" : 250,
-                               "start" : 1
-                            }
-                         ]
-                      },
-                      {
-                         "port_id" : 1,
-                         "strings" : [
-                            {
-                               "len" : 250,
-                               "start" : 1
-                            }
-                         ]
-                      },
-                      {
-                         "port_id" : 2,
-                         "strings" : [
-                            {
-                               "len" : 250,
-                               "start" : 1
-                            }
-                         ]
-                      },
-                      {
-                         "port_id" : 3,
-                         "strings" : [
-                            {
-                               "len" : 250,
-                               "start" : 1
-                            }
-                         ]
-                      }
-                   ]
+                "artnet_en": False,
+                "cloud": True,
+                "device_config": {
+                    "drv_params": {
+                        "t0h": 7000,
+                        "t0l": 2000,
+                        "t1h": 3500,
+                        "t1l": 5500,
+                        "tendh": 4000,
+                        "tendl": 12500,
+                    },
+                    "led_drv": "d9865c",
+                    "led_id": 136,
+                    "led_profile": "RGBW",
+                    "ports": [
+                        {"port_id": 0, "strings": [{"len": 250, "start": 1}]},
+                        {"port_id": 1, "strings": [{"len": 250, "start": 1}]},
+                        {"port_id": 2, "strings": [{"len": 250, "start": 1}]},
+                        {"port_id": 3, "strings": [{"len": 250, "start": 1}]},
+                    ],
                 },
-                "device_name" : "MockPro",
-                "frame_rate" : 9,
-                "group" : {
-                   "mode" : "none",
-                   "offset" : 0,
-                   "size" : 0,
-                   "uid" : ""
+                "device_name": "MockPro",
+                "frame_rate": 9,
+                "group": {"mode": "none", "offset": 0, "size": 0, "uid": ""},
+                "max_capacity": 6722,
+                "max_movies": 24,
+                "max_playlists": 4,
+                "max_steps": 16,
+                "max_supported_led": 1500,
+                "movie_capacity": 6544,
+                "network": {
+                    "dhcp": True,
+                    "gateway": "192.168.0.0",
+                    "ip": "192.0.2.1",
+                    "netmask": "255.255.255.0",
                 },
-                "max_capacity" : 6722,
-                "max_movies" : 24,
-                "max_playlists" : 4,
-                "max_steps" : 16,
-                "max_supported_led" : 1500,
-                "movie_capacity" : 6544,
-                "network" : {
-                   "dhcp" : True,
-                   "gateway" : "192.168.0.0",
-                   "ip" : "192.0.2.1",
-                   "netmask" : "255.255.255.0"
-                },
-                "number_of_led" : 1000,
-                "osc_en" : False,
-                "poe_en" : True,
-                "product_code" : "TWPROCTRLPLC21",
-                "rest_locked" : False,
-                "result" : {
-                   "code" : 1000
-                },
-                "ui_en" : True,
-                "uptime" : 365688633
-             }
+                "number_of_led": 1000,
+                "osc_en": False,
+                "poe_en": True,
+                "product_code": "TWPROCTRLPLC21",
+                "rest_locked": False,
+                "result": {"code": 1000},
+                "ui_en": True,
+                "uptime": 365688633,
+            }
 
         if endpoint == "device/name":
             # Code should be 1000
@@ -158,12 +120,12 @@ class TwinklyMock(Twinkly):
         if endpoint == "movies":
             # Attribute "movies" is missing from the response
             return {
-                       'size': 4,
-                       'max': 24,
-                       'available_frames': 6544,
-                       'max_capacity': 6722,
-                       'result': {TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK}
-                    }
+                "size": 4,
+                "max": 24,
+                "available_frames": 6544,
+                "max_capacity": 6722,
+                "result": {TWINKLY_RETURN_CODE: TWINKLY_RETURN_CODE_OK},
+            }
 
         _LOGGER.warning("Endpoint %s not yet implemented")
         return
@@ -205,6 +167,7 @@ class TestTwinklyGeneric(aiounittest.AsyncTestCase):
         with pytest.raises(TwinklyError) as e:
             await self.client_v2.get_saved_movies()
         assert "Invalid response from Twinkly" in str(e.value)
+
 
 if __name__ == "__main__":
     unittest.main()
