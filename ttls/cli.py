@@ -113,14 +113,18 @@ async def command_movie(t: Twinkly, args: argparse.Namespace):
 
 async def command_static(t: Twinkly, args: argparse.Namespace):
     await t.interview()
-    if m := re.match(r"(\d+),(\d+),(\d+),(\d+)", args.colour):
-        rgbw = (int(m.group(1)), int(m.group(2)), int(m.group(3)), int(m.group(4)))
-    elif m := re.match(r"(\d+),(\d+),(\d+)", args.colour):
-        rgbw = (int(m.group(1)), int(m.group(2)), int(m.group(3)), None)
+    #match on r,g,b or r,g,b,w
+    if m := re.match(r"(\d+),(\d+),(\d+)(?:,(\d+))?", args.colour):
+        r = int(m.group(1))
+        g = int(m.group(2))
+        b = int(m.group(3))
+        #w is optional; convert to int if set
+        if w := m.group(4):
+            w = int(w)
+        c = TwinklyColour(r,g,b,w)
     else:
-        c = TwinklyColour(args.colour)
-        rgbw = (int(c.red * 255), int(c.green * 255), int(c.blue * 255), None)
-    return await t.set_static_colour(rgbw)
+        raise ValueError("Colour argument is not in r,g,b or r,g,b,w format") 
+    return await t.set_static_colour(c)
 
 
 async def command_summary(t: Twinkly, args: argparse.Namespace):

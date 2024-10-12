@@ -458,10 +458,11 @@ class Twinkly:
         elif isinstance(colour, Tuple):
             sequence = [colour]
         elif isinstance(colour, list):
-            if isinstance(colour[0], TwinklyColour):
-                sequence = [c.as_twinkly_tuple() for c in colour]
-            else:
-                sequence = colour
+            sequence = (
+                [c.as_twinkly_tuple() for c in colour]
+                if isinstance(colour[0], TwinklyColour)
+                else colour
+            )
         else:
             raise TypeError("Unknown colour format")
         frame = list(islice(cycle(sequence), self.length))
