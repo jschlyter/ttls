@@ -562,10 +562,7 @@ class Twinkly:
 
     def _valid_response(self, response: dict[Any, Any], check_for: str | None = None) -> dict[Any, Any]:
         """Validate twinkly-responses from the API."""
-        if response and self._api_version >= 2:
-            result = response.get("result")
-        else:
-            result = response
+        result = response.get("result") if response and self._api_version >= 2 else response
         if (
             result
             and result.get(TWINKLY_RETURN_CODE) == TWINKLY_RETURN_CODE_OK
