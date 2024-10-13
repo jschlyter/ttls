@@ -234,9 +234,7 @@ class Twinkly:
                 return await r.json()
         except ClientResponseError as e:
             if e.status == HTTPUnauthorized.status_code:
-                await self._handle_authorized(
-                    self._post, endpoint, exception=e, retry_num=retry_num, **kwargs
-                )
+                await self._handle_authorized(self._post, endpoint, exception=e, retry_num=retry_num, **kwargs)
             else:
                 raise e
 
@@ -268,27 +266,20 @@ class Twinkly:
             else:
                 raise e
 
-    async def _handle_authorized(
-        self, request_method: Callable, endpoint: str, exception: Exception, **kwargs
-    ) -> None:
+    async def _handle_authorized(self, request_method: Callable, endpoint: str, exception: Exception, **kwargs) -> None:
         max_retries = 1
         retry_num = kwargs.pop("retry_num", 0)
 
         if retry_num >= max_retries:
-            _LOGGER.debug(
-                f"Invalid token for request. Maximum retries of {max_retries} exceeded."
-            )
+            _LOGGER.debug(f"Invalid token for request. Maximum retries of {max_retries} exceeded.")
             raise exception
 
         retry_num += 1
         _LOGGER.debug(
-            "Invalid token for request. "
-            + f"Refreshing token and attempting retry {retry_num} of {max_retries}."
+            "Invalid token for request. " + f"Refreshing token and attempting retry {retry_num} of {max_retries}."
         )
         await self.refresh_token()
-        return await request_method(
-            endpoint, headers=self._headers, retry_num=retry_num, **kwargs
-        )
+        return await request_method(endpoint, headers=self._headers, retry_num=retry_num, **kwargs)
 
     async def refresh_token(self) -> None:
         await self.login()
@@ -336,17 +327,11 @@ class Twinkly:
         return self._valid_response(await self._get("reset"))
 
     async def get_network_status(self) -> Any:
-        endpoint = (
-            "network/status"
-            if await self.get_api_version() == 1
-            else "network/eth/status"
-        )
+        endpoint = "network/status" if await self.get_api_version() == 1 else "network/eth/status"
         return self._valid_response(await self._get(endpoint))
 
     async def get_firmware_version(self) -> Any:
-        endpoint = (
-            "fw/version" if await self.get_api_version() == 1 else "fw/ct1/version"
-        )
+        endpoint = "fw/version" if await self.get_api_version() == 1 else "fw/ct1/version"
         return self._valid_response(await self._get(endpoint))
 
     async def get_details(self) -> Any:
@@ -374,15 +359,11 @@ class Twinkly:
         return await self._post("led/out/brightness", json=args)
 
     async def get_mode(self) -> Any:
-        endpoint = (
-            "led/mode" if await self.get_api_version() == 1 else "application/mode"
-        )
+        endpoint = "led/mode" if await self.get_api_version() == 1 else "application/mode"
         return self._valid_response(await self._get(endpoint))
 
     async def set_mode(self, mode: str) -> Any:
-        endpoint = (
-            "led/mode" if await self.get_api_version() == 1 else "application/mode"
-        )
+        endpoint = "led/mode" if await self.get_api_version() == 1 else "application/mode"
         return await self._post(endpoint, json={"mode": mode})
 
     async def get_mqtt(self) -> Any:
@@ -407,17 +388,9 @@ class Twinkly:
         if len(frame) != self.length:
             raise ValueError("Invalid frame length")
         token = await self.ensure_token()
-        frame_segments = [
-            frame[i : i + RT_PAYLOAD_MAX_LIGHTS]
-            for i in range(0, len(frame), RT_PAYLOAD_MAX_LIGHTS)
-        ]
+        frame_segments = [frame[i : i + RT_PAYLOAD_MAX_LIGHTS] for i in range(0, len(frame), RT_PAYLOAD_MAX_LIGHTS)]
         for i in range(0, len(frame_segments)):
-            header = (
-                bytes([len(frame_segments)])
-                + bytes(base64.b64decode(token))
-                + bytes([0, 0])
-                + bytes([i])
-            )
+            header = bytes([len(frame_segments)]) + bytes(base64.b64decode(token)) + bytes([0, 0]) + bytes([i])
             payload = []
             for x in frame_segments[i]:
                 payload.extend(list(x))
@@ -440,10 +413,7 @@ class Twinkly:
 
     async def set_static_colour(
         self,
-        colour: TwinklyColour
-        | TwinklyColourTuple
-        | list[TwinklyColour]
-        | list[TwinklyColourTuple],
+        colour: TwinklyColour | TwinklyColourTuple | list[TwinklyColour] | list[TwinklyColourTuple],
     ) -> None:
         if not self._details:
             await self.interview()
@@ -466,21 +436,14 @@ class Twinkly:
 
     async def set_cycle_colours(
         self,
-        colour: TwinklyColour
-        | TwinklyColourTuple
-        | list[TwinklyColour]
-        | list[TwinklyColourTuple],
+        colour: TwinklyColour | TwinklyColourTuple | list[TwinklyColour] | list[TwinklyColourTuple],
     ) -> None:
         if isinstance(colour, TwinklyColour):
             sequence = [colour.as_twinkly_tuple()]
         elif isinstance(colour, Tuple):
             sequence = [colour]
         elif isinstance(colour, list):
-            sequence = (
-                [c.as_twinkly_tuple() for c in colour]
-                if isinstance(colour[0], TwinklyColour)
-                else colour
-            )
+            sequence = [c.as_twinkly_tuple() for c in colour] if isinstance(colour[0], TwinklyColour) else colour
         else:
             raise TypeError("Unknown colour format")
         frame = list(islice(cycle(sequence), self.length))
@@ -543,9 +506,7 @@ class Twinkly:
         if driver_name in TWINKLY_MUSIC_DRIVERS_OFFICIAL:
             return TWINKLY_MUSIC_DRIVERS_OFFICIAL[driver_name]
         elif driver_name in TWINKLY_MUSIC_DRIVERS_UNOFFICIAL:
-            _LOGGER.warn(
-                f"Music driver '{driver_name}'is defined, but is not officially supported"
-            )
+            _LOGGER.warn(f"Music driver '{driver_name}'is defined, but is not officially supported")
             return TWINKLY_MUSIC_DRIVERS_UNOFFICIAL[driver_name]
         else:
             return None
@@ -599,9 +560,7 @@ class Twinkly:
             json={"id": entry_id},
         )
 
-    def _valid_response(
-        self, response: dict[Any, Any], check_for: str | None = None
-    ) -> dict[Any, Any]:
+    def _valid_response(self, response: dict[Any, Any], check_for: str | None = None) -> dict[Any, Any]:
         """Validate twinkly-responses from the API."""
         if response and self._api_version >= 2:
             result = response.get("result")

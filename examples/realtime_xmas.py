@@ -25,9 +25,7 @@ def generate_xmas_frame(n: int) -> TwinklyFrame:
 
 async def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--host", metavar="hostname", required=True, help="Device address"
-    )
+    parser.add_argument("--host", metavar="hostname", required=True, help="Device address")
     parser.add_argument(
         "--count",
         dest="count",

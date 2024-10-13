@@ -157,13 +157,9 @@ async def main_loop() -> None:
     """Main function"""
 
     parser = argparse.ArgumentParser(description="Twinkly Twinkly Little Star")
-    parser.add_argument(
-        "--host", metavar="hostname", required=True, help="Device address"
-    )
+    parser.add_argument("--host", metavar="hostname", required=True, help="Device address")
     parser.add_argument("--debug", action="store_true", help="Enable debugging")
-    parser.add_argument(
-        "--json", action="store_true", help="Output result as compact JSON"
-    )
+    parser.add_argument("--json", action="store_true", help="Output result as compact JSON")
 
     subparsers = parser.add_subparsers(dest="command")
 
@@ -180,20 +176,12 @@ async def main_loop() -> None:
     parser_name.add_argument("--name", metavar="name", type=str, required=False)
     parser_name.set_defaults(func=command_name)
 
-    parser_power = subparsers.add_parser(
-        "power", help="Get or set device power state ('on', 'off')"
-    )
-    parser_power.add_argument(
-        "--on", action="store_true", required=False, help="Turn device on"
-    )
-    parser_power.add_argument(
-        "--off", action="store_true", required=False, help="Turn device off"
-    )
+    parser_power = subparsers.add_parser("power", help="Get or set device power state ('on', 'off')")
+    parser_power.add_argument("--on", action="store_true", required=False, help="Turn device on")
+    parser_power.add_argument("--off", action="store_true", required=False, help="Turn device off")
     parser_power.set_defaults(func=command_power)
 
-    parser_brightness = subparsers.add_parser(
-        "brightness", help="Get or set LED brightness"
-    )
+    parser_brightness = subparsers.add_parser("brightness", help="Get or set LED brightness")
     parser_brightness.add_argument(
         "--pct",
         metavar="value",
