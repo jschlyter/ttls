@@ -36,7 +36,12 @@ import time
 from itertools import cycle, islice
 from typing import Any, Callable, Optional, Tuple
 
-from aiohttp import ClientResponseError, ClientSession, ClientTimeout
+from aiohttp import (
+    ClientResponseError,
+    ClientSession,
+    ClientTimeout,
+    ServerDisconnectedError,
+)
 from aiohttp.web_exceptions import HTTPUnauthorized
 
 from .colours import TwinklyColour, TwinklyColourTuple
@@ -107,6 +112,7 @@ class Twinkly:
         host: str,
         session: ClientSession | None = None,
         timeout: int | None = None,
+        api_version: int | None = None,
     ):
         self.host = host
         self._timeout = ClientTimeout(total=timeout or DEFAULT_TIMEOUT)
@@ -123,10 +129,13 @@ class Twinkly:
         self._token = None
         self._details: dict[str, str | int] = {}
         self._default_mode = "movie"
+        self._api_version = api_version
 
     @property
     def base(self) -> str:
-        return f"http://{self.host}/xled/v1"
+        if self._api_version is None:
+            raise ValueError("api version isn't set")
+        return f"http://{self.host}/xled/v{self._api_version}"
 
     @property
     def length(self) -> int:
@@ -155,6 +164,7 @@ class Twinkly:
     async def close(self) -> None:
         if not self._shared_session:
             await self._get_session().close()
+            self._session = None
 
     async def interview(self, force: bool | None = False) -> None:
         if len(self._details) == 0 or force:
@@ -164,9 +174,48 @@ class Twinkly:
                 self.default_mode = mode.get("mode")
 
     def _get_session(self):
-        return self._session or ClientSession()
+        if not self._session:
+            self._session = ClientSession()
+        return self._session
+
+    async def _info(self) -> Any:
+        _LOGGER.debug("INFO")
+        try:
+            async with self._get_session().get(
+                f"http://{self.host}/xled/info",
+                timeout=self._timeout,
+                raise_for_status=True,
+            ) as r:
+                _LOGGER.debug("INFO response %d", r.status)
+                return await r.json()
+        except (ClientResponseError, ServerDisconnectedError) as e:
+            raise e
+
+    async def get_api_version(self) -> int:
+        if self._api_version is None:
+            self._api_version = await self.detect_api_version()
+        return self._api_version
+
+    async def detect_api_version(self) -> int:
+        try:
+            self._api_version = 1
+            _ = await self.get_details()
+            return 1
+        except (ClientResponseError, TwinklyError):
+            pass
+
+        try:
+            self._api_version = 2
+            _ = await self.get_details()
+            return 2
+        except (ClientResponseError, TwinklyError):
+            pass
+
+        self._api_version = None
+        return None
 
     async def _post(self, endpoint: str, **kwargs) -> Any:
+        await self.get_api_version()
         await self.ensure_token()
         _LOGGER.debug("POST endpoint %s", endpoint)
         if "json" in kwargs:
@@ -192,6 +241,7 @@ class Twinkly:
                 raise e
 
     async def _get(self, endpoint: str, **kwargs) -> Any:
+        await self.get_api_version()
         await self.ensure_token()
         _LOGGER.debug("GET endpoint %s", endpoint)
         headers = kwargs.pop("headers", self._headers)
@@ -275,19 +325,29 @@ class Twinkly:
         await self._post("verify", json={})
 
     async def get_name(self) -> Any:
-        return self._valid_response(await self._get("device_name"))
+        endpoint = "device_name" if await self.get_api_version() == 1 else "device/name"
+        return self._valid_response(await self._get(endpoint))
 
     async def set_name(self, name: str) -> Any:
-        return await self._post("device_name", json={"name": name})
+        endpoint = "device_name" if await self.get_api_version() == 1 else "device/name"
+        return await self._post(endpoint, json={"name": name})
 
     async def reset(self) -> Any:
         return self._valid_response(await self._get("reset"))
 
     async def get_network_status(self) -> Any:
-        return self._valid_response(await self._get("network/status"))
+        endpoint = (
+            "network/status"
+            if await self.get_api_version() == 1
+            else "network/eth/status"
+        )
+        return self._valid_response(await self._get(endpoint))
 
     async def get_firmware_version(self) -> Any:
-        return self._valid_response(await self._get("fw/version"))
+        endpoint = (
+            "fw/version" if await self.get_api_version() == 1 else "fw/ct1/version"
+        )
+        return self._valid_response(await self._get(endpoint))
 
     async def get_details(self) -> Any:
         return self._valid_response(await self._get("gestalt"))
@@ -308,15 +368,22 @@ class Twinkly:
         return self._valid_response(await self._get("led/out/brightness"))
 
     async def set_brightness(self, percent: int) -> Any:
-        return await self._post(
-            "led/out/brightness", json={"value": percent, "type": "A"}
-        )
+        args = {"value": percent, "type": "A"}
+        if await self.get_api_version() >= 2:
+            args["mode"] = "enabled"
+        return await self._post("led/out/brightness", json=args)
 
     async def get_mode(self) -> Any:
-        return self._valid_response(await self._get("led/mode"))
+        endpoint = (
+            "led/mode" if await self.get_api_version() == 1 else "application/mode"
+        )
+        return self._valid_response(await self._get(endpoint))
 
     async def set_mode(self, mode: str) -> Any:
-        return await self._post("led/mode", json={"mode": mode})
+        endpoint = (
+            "led/mode" if await self.get_api_version() == 1 else "application/mode"
+        )
+        return await self._post(endpoint, json={"mode": mode})
 
     async def get_mqtt(self) -> Any:
         return self._valid_response(await self._get("mqtt/config"))
@@ -357,6 +424,8 @@ class Twinkly:
             self._socket.sendto(header + bytes(payload), (self.host, self._rt_port))
 
     async def get_movie_config(self) -> Any:
+        if await self.get_api_version() != 1:
+            raise NotImplementedError
         return self._valid_response(await self._get("led/movie/config"))
 
     async def set_movie_config(self, data: dict) -> Any:
@@ -382,11 +451,18 @@ class Twinkly:
             colour = colour[0]
         if isinstance(colour, Tuple):
             colour = TwinklyColour.from_twinkly_tuple(colour)
-        await self._post(
-            "led/color",
-            json=colour.as_dict(),
-        )
-        await self.set_mode("color")
+        if await self.get_api_version() == 1:
+            await self._post(
+                "led/color",
+                json=colour.as_dict(),
+            )
+            await self.set_mode("color")
+        else:
+            await self.set_mode("color")
+            await self._post(
+                "led/color",
+                json=colour.as_dict(),
+            )
 
     async def set_cycle_colours(
         self,
@@ -448,6 +524,8 @@ class Twinkly:
         return await self._post("music/drivers/current", json={"action": "prev"})
 
     async def get_current_music_driver(self) -> Any:
+        if await self.get_api_version() != 1:
+            raise NotImplementedError
         return self._valid_response(await self._get("music/drivers/current"))
 
     async def set_current_music_driver(self, driver_name: str) -> Any:
@@ -486,10 +564,14 @@ class Twinkly:
 
     async def get_predefined_effects(self) -> Any:
         """Get the list of predefined effects."""
+        if await self.get_api_version() != 1:
+            raise NotImplementedError
         return self._valid_response(await self._get("led/effects"))
 
     async def get_current_predefined_effect(self) -> Any:
         """Get current effect."""
+        if await self.get_api_version() != 1:
+            raise NotImplementedError
         return self._valid_response(await self._get("led/effects/current"))
 
     async def set_current_predefined_effect(self, effect_id: int) -> None:
@@ -501,10 +583,13 @@ class Twinkly:
 
     async def get_playlist(self) -> Any:
         """Get the playlist."""
-        return self._valid_response(await self._get("playlist"))
+        endpoint = "playlist" if await self.get_api_version() == 1 else "playlists"
+        return self._valid_response(await self._get(endpoint))
 
     async def get_current_playlist_entry(self) -> Any:
         """Get current playlist."""
+        if await self.get_api_version() != 1:
+            raise NotImplementedError
         return self._valid_response(await self._get("playlist/current"))
 
     async def set_current_playlist_entry(self, entry_id: int) -> None:
@@ -518,9 +603,13 @@ class Twinkly:
         self, response: dict[Any, Any], check_for: str | None = None
     ) -> dict[Any, Any]:
         """Validate twinkly-responses from the API."""
+        if response and self._api_version >= 2:
+            result = response.get("result")
+        else:
+            result = response
         if (
-            response
-            and response.get(TWINKLY_RETURN_CODE) == TWINKLY_RETURN_CODE_OK
+            result
+            and result.get(TWINKLY_RETURN_CODE) == TWINKLY_RETURN_CODE_OK
             and (not check_for or check_for in response)
         ):
             _LOGGER.debug("Twinkly response: %s", response)
