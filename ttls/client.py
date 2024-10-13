@@ -198,11 +198,21 @@ class Twinkly:
 
     async def detect_api_version(self) -> int:
         try:
-            info = await self._info()
-            return int(info["api"]["min_version"].split(".")[0])
-        except (ClientResponseError, ServerDisconnectedError) as e:
-            _LOGGER.debug(e)
+            self._api_version = 1
+            _ = await self.get_details()
             return 1
+        except (ClientResponseError, TwinklyError):
+            pass
+
+        try:
+            self._api_version = 2
+            _ = await self.get_details()
+            return 2
+        except (ClientResponseError, TwinklyError):
+            pass
+
+        self._api_version = None
+        return None
 
     async def _post(self, endpoint: str, **kwargs) -> Any:
         await self.get_api_version()
