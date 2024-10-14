@@ -2,7 +2,7 @@
 
 [tool.poetry]
 name = "ttls"
-version = "1.8.3"
+version = "1.9.0"
 description = "Twinkly Twinkly Little Star"
 authors = ["Jakob Schlyter <jakob@schlyter.se>"]
 license = "BSD-2-Clause"
