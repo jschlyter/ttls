@@ -26,15 +26,13 @@ OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
 IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from __future__ import annotations
-
 import base64
 import logging
 import os
 import socket
 import time
 from itertools import cycle, islice
-from typing import Any, Callable, Optional, Tuple
+from typing import Any, Callable
 
 from aiohttp import (
     ClientResponseError,
@@ -49,7 +47,7 @@ from .colours import TwinklyColour, TwinklyColourTuple
 _LOGGER = logging.getLogger(__name__)
 
 TwinklyFrame = list[TwinklyColourTuple]
-TwinklyResult = Optional[dict]
+TwinklyResult = dict | None
 
 
 TWINKLY_MODES = [
@@ -419,7 +417,7 @@ class Twinkly:
             await self.interview()
         if isinstance(colour, list):
             colour = colour[0]
-        if isinstance(colour, Tuple):
+        if isinstance(colour, tuple):
             colour = TwinklyColour.from_twinkly_tuple(colour)
         if await self.get_api_version() == 1:
             await self._post(
@@ -440,7 +438,7 @@ class Twinkly:
     ) -> None:
         if isinstance(colour, TwinklyColour):
             sequence = [colour.as_twinkly_tuple()]
-        elif isinstance(colour, Tuple):
+        elif isinstance(colour, tuple):
             sequence = [colour]
         elif isinstance(colour, list):
             sequence = [c.as_twinkly_tuple() for c in colour] if isinstance(colour[0], TwinklyColour) else colour
