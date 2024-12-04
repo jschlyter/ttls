@@ -1,9 +1,8 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple, Union
 
-ColourDict = Dict[str, int]
-ColourTuple = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
-TwinklyColourTuple = Union[Tuple[int, int, int], Tuple[int, int, int, int]]
+ColourDict = dict[str, int]
+ColourTuple = tuple[int, int, int] | tuple[int, int, int, int]
+TwinklyColourTuple = tuple[int, int, int] | tuple[int, int, int, int]
 
 
 @dataclass(frozen=True)
@@ -11,7 +10,7 @@ class TwinklyColour:
     red: int
     green: int
     blue: int
-    white: Optional[int] = None
+    white: int | None = None
 
     def as_twinkly_tuple(self) -> TwinklyColourTuple:
         """Convert TwinklyColour to a tuple as used by Twinkly: (R,G,B) or (W,R,G,B)"""
