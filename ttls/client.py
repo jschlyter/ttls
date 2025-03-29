@@ -31,8 +31,9 @@ import logging
 import os
 import socket
 import time
+from collections.abc import Callable
 from itertools import cycle, islice
-from typing import Any, Callable
+from typing import Any
 
 from aiohttp import (
     ClientResponseError,
