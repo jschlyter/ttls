@@ -394,6 +394,19 @@ class Twinkly:
                 payload.extend(list(x))
             self._socket.sendto(header + bytes(payload), (self.host, self._rt_port))
 
+    async def send_frame_3(self, frame: TwinklyFrame) -> None:
+        await self.interview()
+        if len(frame) != self.length:
+            raise ValueError("Invalid frame length")
+        token = await self.ensure_token()
+        frame_segments = [frame[i : i + RT_PAYLOAD_MAX_LIGHTS] for i in range(0, len(frame), RT_PAYLOAD_MAX_LIGHTS)]
+        for i in range(0, len(frame_segments)):
+            header = bytes([0x03]) + bytes(base64.b64decode(token)) + bytes([0, 0]) + bytes([i])
+            payload = []
+            for x in frame_segments[i]:
+                payload.extend(list(x))
+            self._socket.sendto(header + bytes(payload), (self.host, self._rt_port))            
+
     async def get_movie_config(self) -> Any:
         if await self.get_api_version() != 1:
             raise NotImplementedError
