@@ -1,31 +1,39 @@
 # PEP 518: https://www.python.org/dev/peps/pep-0518/
 
-[tool.poetry]
+[project]
 name = "ttls"
 version = "1.9.0"
 description = "Twinkly Twinkly Little Star"
-authors = ["Jakob Schlyter <jakob@schlyter.se>"]
+authors = [
+    { name = "Jakob Schlyter", email = "jakob@schlyter.se" }
+]
 license = "BSD-2-Clause"
-classifiers = ["License :: OSI Approved :: BSD License"]
 readme = "README.md"
+requires-python = ">=3.11,<4.0"
+dependencies = [
+    "aiohttp>=3.11.14",
+]
+
+[project.urls]
 repository = "https://github.com/jschlyter/ttls"
 
-[tool.poetry.scripts]
+[project.scripts]
 ttls = "ttls.cli:main"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-aiohttp = "^3.8.5"
-
-[tool.poetry.group.dev.dependencies]
-pytest = "^8"
-aiounittest = "^1.4.2"
-ruff = ">=0.8.1"
-pytest-ruff = "^0.4.1"
+[tool.setuptools]
+packages = ["ttls"]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[dependency-groups]
+dev = [
+    "aiounittest>=1.5.0",
+    "pytest>=8.3.5",
+    "pytest-ruff>=0.4.1",
+    "ruff>=0.11.2",
+]
 
 [tool.ruff]
 line-length = 120
