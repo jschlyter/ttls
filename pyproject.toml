@@ -2,7 +2,7 @@
 
 [project]
 name = "ttls"
-version = "1.9.0"
+dynamic = ["version"]
 description = "Twinkly Twinkly Little Star"
 authors = [
     { name = "Jakob Schlyter", email = "jakob@schlyter.se" }
@@ -20,12 +20,12 @@ repository = "https://github.com/jschlyter/ttls"
 [project.scripts]
 ttls = "ttls.cli:main"
 
-[tool.setuptools]
-packages = ["ttls"]
-
 [build-system]
-requires = ["setuptools>=77"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
 
 [dependency-groups]
 dev = [
