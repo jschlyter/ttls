@@ -213,9 +213,10 @@ class Twinkly:
         self._api_version = None
         return None
 
-    async def _post(self, endpoint: str, **kwargs) -> Any:
+    async def _post(self, endpoint: str, ensure_token: bool = True, **kwargs) -> Any:
         await self.get_api_version()
-        await self.ensure_token()
+        if ensure_token:
+            await self.ensure_token()
         _LOGGER.debug("POST endpoint %s", endpoint)
         if "json" in kwargs:
             _LOGGER.debug("POST payload %s", kwargs["json"])
@@ -237,9 +238,10 @@ class Twinkly:
             else:
                 raise e
 
-    async def _get(self, endpoint: str, **kwargs) -> Any:
+    async def _get(self, endpoint: str, ensure_token: bool = True, **kwargs) -> Any:
         await self.get_api_version()
-        await self.ensure_token()
+        if ensure_token:
+            await self.ensure_token()
         _LOGGER.debug("GET endpoint %s", endpoint)
         headers = kwargs.pop("headers", self._headers)
         retry_num = kwargs.pop("retry_num", 0)
@@ -334,7 +336,7 @@ class Twinkly:
         return self._valid_response(await self._get(endpoint))
 
     async def get_details(self) -> Any:
-        return self._valid_response(await self._get("gestalt"))
+        return self._valid_response(await self._get("gestalt", ensure_token=False))
 
     async def is_on(self) -> bool | None:
         mode = await self.get_mode()
