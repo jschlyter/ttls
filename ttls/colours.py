@@ -36,25 +36,22 @@ class TwinklyColour:
 
     def as_dict(self) -> ColourDict:
         """Convert TwinklyColour to a dict wth color names used by set-led functions."""
-        if self.cold_white is not None and self.white is not None:
-            return {
-                "red": self.red,
-                "green": self.green,
-                "blue": self.blue,
-                "white": self.white,
-                "cold_white": self.cold_white,
-            }
-        elif self.white is not None:
-            return {"red": self.red, "green": self.green, "blue": self.blue, "white": self.white}
-        else:
-            return {"red": self.red, "green": self.green, "blue": self.blue}
+        return {
+            "red": self.red,
+            "green": self.green,
+            "blue": self.blue,
+            **({"white": self.white} if self.white is not None else {}),
+            **({"cold_white": self.cold_white} if self.cold_white is not None else {})
+        }
 
     @classmethod
     def from_twinkly_tuple(cls, t):
-        if len(t) == 5:
-            return cls(red=t[2], green=t[3], blue=t[4], white=t[1], cold_white=t[0])
-        if len(t) == 4:
-            return cls(red=t[1], green=t[2], blue=t[3], white=t[0])
-        elif len(t) == 3:
-            return cls(red=t[0], green=t[1], blue=t[2])
-        raise TypeError("Unknown colour format")
+        match len(t):
+            case 5:
+                return cls(red=t[2], green=t[3], blue=t[4], white=t[1], cold_white=t[0])
+            case 4:
+                return cls(red=t[1], green=t[2], blue=t[3], white=t[0])
+            case 3:
+                return cls(red=t[0], green=t[1], blue=t[2])
+            case _:
+                raise TypeError("Unknown colour format")
