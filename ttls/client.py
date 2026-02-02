@@ -408,7 +408,7 @@ class Twinkly:
             payload = []
             for x in frame_segments[i]:
                 payload.extend(list(x))
-            self._socket.sendto(header + bytes(payload), (self.host, self._rt_port))            
+            self._socket.sendto(header + bytes(payload), (self.host, self._rt_port))
 
     async def get_movie_config(self) -> Any:
         if await self.get_api_version() != 1:
