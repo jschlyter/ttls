@@ -41,7 +41,7 @@ class TwinklyColour:
             "green": self.green,
             "blue": self.blue,
             **({"white": self.white} if self.white is not None else {}),
-            **({"cold_white": self.cold_white} if self.cold_white is not None else {})
+            **({"cold_white": self.cold_white} if self.cold_white is not None else {}),
         }
 
     @classmethod
