@@ -13,8 +13,12 @@ class TwinklyColour:
     white: int | None = None
     cold_white: int | None = None
 
+    def __post_init__(self):
+        if self.cold_white is not None and self.white is None:
+            raise ValueError("cold_white requires white to be set")
+
     def as_twinkly_tuple(self) -> TwinklyColourTuple:
-        """Convert TwinklyColour to a tuple as used by Twinkly: (R,G,B), (W,R,G,B) or (W,W,R,G,B)"""
+        """Convert TwinklyColour to a tuple as used by Twinkly: (R,G,B), (W,R,G,B) or (CW,W,R,G,B)"""
         if self.cold_white is not None and self.white is not None:
             return (self.cold_white, self.white, self.red, self.green, self.blue)
         elif self.white is not None:
@@ -23,7 +27,7 @@ class TwinklyColour:
             return (self.red, self.green, self.blue)
 
     def as_tuple(self) -> ColourTuple:
-        """Convert TwinklyColour to a tuple: (R,G,B), (R,G,B,W) or (R,G,B,W,W)"""
+        """Convert TwinklyColour to a tuple: (R,G,B), (R,G,B,W) or (R,G,B,W,CW)"""
         if self.cold_white is not None and self.white is not None:
             return (self.red, self.green, self.blue, self.white, self.cold_white)
         elif self.white is not None:
