@@ -102,7 +102,15 @@ TWINKLY_MUSIC_DRIVERS = {
 TWINKLY_RETURN_CODE = "code"
 TWINKLY_RETURN_CODE_OK = 1000
 
-DEFAULT_TIMEOUT = 3
+# Twinkly devices are commonly polled on an interval, and their radio idles in
+# between. The first request after an idle period has to wake it, and three
+# seconds - which covers connection setup as well as the response - is often
+# not enough. Measured across three devices polled every 30 seconds, the first
+# request of each cycle timed out 61% of the time at 3 seconds, while every
+# later request in the same cycle answered in well under a second. Responses
+# over three seconds happen in normal use too: a get_current_movie() on a
+# device rendering a movie was observed answering in 5.003 seconds.
+DEFAULT_TIMEOUT = 10
 
 
 class Twinkly:
