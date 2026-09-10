@@ -353,7 +353,10 @@ class Twinkly:
         return mode.get("mode", "off") != "off"
 
     async def turn_on(self) -> Any:
-        return await self.set_mode(self._default_mode)
+        mode = self._default_mode
+        if mode == "movie" and not (await self.get_saved_movies())["movies"]:
+            mode = "color"
+        return await self.set_mode(mode)
 
     async def turn_off(self) -> Any:
         return await self.set_mode("off")
