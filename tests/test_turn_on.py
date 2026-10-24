@@ -1,13 +1,12 @@
 """Pre-registered tests for turning Twinkly devices on."""
 
+import unittest
 from unittest.mock import AsyncMock
-
-import aiounittest
 
 from ttls.client import Twinkly
 
 
-class TestTwinklyTurnOn(aiounittest.AsyncTestCase):
+class TestTwinklyTurnOn(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.client = Twinkly(host="192.0.2.1", api_version=1)
         self.client.get_saved_movies = AsyncMock(return_value={"movies": []})
