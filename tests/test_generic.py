@@ -3,7 +3,6 @@ import unittest
 import uuid
 from typing import Any
 
-import aiounittest
 import pytest
 
 from ttls.client import (
@@ -131,7 +130,7 @@ class TwinklyMock(Twinkly):
         return
 
 
-class TestTwinklyGeneric(aiounittest.AsyncTestCase):
+class TestTwinklyGeneric(unittest.IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(self):
         logging.basicConfig(level=logging.DEBUG)
